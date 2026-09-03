@@ -33,8 +33,7 @@ func FromContext(ctx context.Context) AuthContext {
 
 // Middleware resolves the opaque access-token cookie (if any) against the
 // TokenStore/AccessTokenIssuer and attaches an AuthContext to every
-// request, authenticated or not. Mount this once, globally, ahead of both
-// public and protected routes.
+// request, authenticated or not.
 func Middleware(issuer *AccessTokenIssuer) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -57,8 +56,6 @@ func Middleware(issuer *AccessTokenIssuer) func(http.Handler) http.Handler {
 }
 
 // RequireAuth blocks any request whose AuthContext isn't authenticated.
-// Mount this on top of Middleware for routes that need a logged-in user
-// (e.g. GET /web/me).
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !FromContext(r.Context()).Authenticated {

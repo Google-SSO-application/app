@@ -10,14 +10,11 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// redisTokenStore is the Redis-backed TokenStore implementation, satisfying
-// the acceptance criterion "must use Redis for saving the opaque token".
+// redisTokenStore is the Redis-backed TokenStore implementation.
 type redisTokenStore struct {
 	client *redis.Client
 }
 
-// NewRedisTokenStore is the DI constructor. Returns the TokenStore
-// interface so callers (AccessTokenIssuer) never see the Redis client.
 func NewRedisTokenStore(client *redis.Client) TokenStore {
 	return &redisTokenStore{client: client}
 }

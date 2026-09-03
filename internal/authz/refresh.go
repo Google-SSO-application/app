@@ -10,15 +10,13 @@ import (
 
 var ErrInvalidRefreshToken = errors.New("invalid or expired refresh token")
 
-// RefreshClaims is the JWT payload for refresh tokens.
+// JWT payload for refresh tokens.
 type RefreshClaims struct {
 	Email string `json:"email"`
 	jwt.RegisteredClaims
 }
 
-// RefreshTokenIssuer mints and validates JWT refresh tokens, per the
-// acceptance criterion "must use JWT as refresh tokens" (as opposed to the
-// opaque access tokens, which are random Redis keys).
+// RefreshTokenIssuer mints and validates JWT refresh tokens.
 type RefreshTokenIssuer struct {
 	secret []byte
 	ttl    time.Duration
@@ -45,8 +43,7 @@ func (r *RefreshTokenIssuer) Issue(userID uuid.UUID, email string) (string, erro
 	return token.SignedString(r.secret)
 }
 
-// Validate parses and verifies a refresh JWT, returning the user ID it was
-// issued for.
+// Validate parses and verifies a refresh JWT, returns the user ID
 func (r *RefreshTokenIssuer) Validate(tokenStr string) (uuid.UUID, string, error) {
 	claims := &RefreshClaims{}
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (any, error) {
