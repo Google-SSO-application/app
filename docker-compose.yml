@@ -41,16 +41,22 @@ services:
       redis:
         condition: service_healthy
     environment:
-      APP_PORT: "8080"
-      APP_ENV: "production"
+      APP_PORT: ${APP_PORT}
+      APP_ENV: "${APP_ENV}"
+      FRONTEND_URL: ${FRONTEND_URL}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN}
+      COOKIE_SECURE: ${COOKIE_SECURE}
       POSTGRES_DSN: ${POSTGRES_DSN}
       REDIS_ADDR: "redis:6379"
       REDIS_PASSWORD: ""
       REDIS_DB: "0"
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
       GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET}"
-      GOOGLE_REDIRECT_URL: "http://localhost:8080/web/auth/google/callback"
-      ALLOWED_GOOGLE_DOMAIN: "codimite.com"
+      GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL}
+      ALLOWED_GOOGLE_DOMAIN: ${ALLOWED_GOOGLE_DOMAIN}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL}
+      REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL}
     ports:
       - "8080:8080"
 
