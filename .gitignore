@@ -12,6 +12,7 @@
 coverage/
 
 # Frontend dependencies and local build output
+web/dist/
 web/frontend/node_modules/
 web/frontend/dist/
 
