@@ -399,26 +399,26 @@ export default function App() {
                 {nav.map((n) => (
                   <El as="button" key={n.id} onClick={n.go} title={n.title} style={n.style}>
                     <span style={{ width: 22, textAlign: "center", opacity: .9, flex: "0 0 auto" }}>{n.icon}</span>
-                    <span style={n.labelStyle}>{n.label}</span>
-                    <span style={n.countStyle}>{n.count}</span>
+                    <span style={cssToObj(n.labelStyle)}>{n.label}</span>
+                    <span style={cssToObj(n.countStyle)}>{n.count}</span>
                   </El>
                 ))}
               </div>
 
-              <div style={sectionStyle}>Projects</div>
+              <div style={cssToObj(sectionStyle)}>Projects</div>
               <div style={{ height: 14 }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 {projectList.map((p) => (
                   <El as="button" key={p.name} onClick={p.pick} title={p.title} style={p.style}>
-                    <span style={p.dot} />
-                    <span style={p.labelStyle}>{p.name}</span>
-                    <span style={p.countStyle}>{p.count}</span>
+                    <span style={cssToObj(p.dot)} />
+                    <span style={cssToObj(p.labelStyle)}>{p.name}</span>
+                    <span style={cssToObj(p.countStyle)}>{p.count}</span>
                   </El>
                 ))}
               </div>
             </div>
 
-            <div style={syncCardStyle}>
+            <div style={cssToObj(syncCardStyle)}>
               {mini && (
                 <button onClick={goSources} title="Drive sync — manage sources" style={{ width: 38, height: 38, borderRadius: 12, border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.08)", cursor: "pointer", fontSize: 14, position: "relative", color: "inherit" }}>
                   ◲<span style={{ position: "absolute", top: 5, right: 5, width: 6, height: 6, borderRadius: "50%", background: "#5fe3a1", boxShadow: "0 0 8px #5fe3a1" }} />
