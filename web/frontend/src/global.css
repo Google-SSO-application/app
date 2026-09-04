@@ -1,0 +1,18 @@
+html, body { margin:0; padding:0; background:#05060c; }
+* { box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+a { color:#a9b4ff; text-decoration:none; }
+a:hover { color:#d8dcff; }
+input, button, textarea { font:inherit; color:inherit; }
+::selection { background:rgba(139,123,255,.35); }
+::-webkit-scrollbar { width:10px; height:10px; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,.12); border-radius:10px; border:3px solid transparent; background-clip:content-box; }
+@keyframes drift1 { 0%,100%{transform:translate3d(0,0,0) scale(1)} 50%{transform:translate3d(6vw,-4vh,0) scale(1.15)} }
+@keyframes drift2 { 0%,100%{transform:translate3d(0,0,0) scale(1.1)} 50%{transform:translate3d(-7vw,5vh,0) scale(.9)} }
+@keyframes drift3 { 0%,100%{transform:translate3d(0,0,0)} 50%{transform:translate3d(4vw,6vh,0)} }
+@keyframes sheen { 0%{transform:translateX(-120%)} 100%{transform:translateX(220%)} }
+
+button, input, textarea { font-family: inherit; }
+button { outline: none; }
+button:hover { filter: none; }
+
+.hover-lift:hover { transform: translateY(-2px); }

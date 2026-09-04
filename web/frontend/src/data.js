@@ -1,0 +1,75 @@
+export const DOCS = [
+  {id:1,title:"Payments service runbook",type:"PDF",project:"Payments",icon:"▤",status:"current",updated:"updated 3d ago · Nadia R.",version:"4.2",
+   excerpt:"On-call procedures for the settlement pipeline: retry windows, dead-letter replay, and the escalation ladder for stuck payouts.",
+   tags:["oncall","runbook","settlement","retry"],
+   versions:[{v:"v4.2",note:"Added dead-letter replay steps for the new queue",who:"Nadia R.",date:"12 Aug 2026",tag:"current"},{v:"v4.1",note:"Escalation ladder updated after re-org",who:"Tom B.",date:"27 Jun 2026",tag:""},{v:"v3.8",note:"Initial settlement pipeline section",who:"Priya M.",date:"04 Mar 2026",tag:"archived"}],
+   links:[{q:"Why do payouts stall at 'pending_capture'?",meta:"answered · 6 replies"}]},
+  {id:2,title:"README — atlas-ingest",type:"README",project:"Platform",icon:"›_",status:"current",updated:"synced from GitHub · 1d ago",version:"1.9",
+   excerpt:"Local setup, env vars and the ingestion CLI. Covers the parser plugins for PDF, Markdown and Google Docs exports.",
+   tags:["setup","cli","ingest","env"],
+   versions:[{v:"v1.9",note:"Documented PARSER_CONCURRENCY and retry backoff",who:"auto-sync",date:"31 Aug 2026",tag:"current"},{v:"v1.7",note:"Added Google Docs export parser",who:"auto-sync",date:"19 Jul 2026",tag:""}],
+   links:[{q:"How do I add a new parser plugin?",meta:"answered · 3 replies"}]},
+  {id:3,title:"Onboarding checklist for new hires",type:"Google Doc",project:"People",icon:"◲",status:"outdated",updated:"updated 7mo ago · Priya M.",version:"2.0",
+   excerpt:"Day-one accounts, laptop provisioning and the buddy programme. Some tooling steps predate the SSO migration.",
+   tags:["onboarding","hr","accounts","sso"],
+   versions:[{v:"v2.0",note:"Pre-SSO account setup",who:"Priya M.",date:"02 Feb 2026",tag:"outdated"},{v:"v1.4",note:"Buddy programme added",who:"Sam O.",date:"11 Nov 2025",tag:""}],
+   links:[{q:"Which accounts are auto-provisioned now?",meta:"answered · 2 replies"}]},
+  {id:4,title:"Designing idempotent webhooks",type:"Medium",project:"Platform",icon:"✎",status:"current",updated:"saved by Tom B. · 2w ago",version:"1.0",
+   excerpt:"External write-up the team uses as the reference for webhook keys, replay windows and consumer-side deduplication.",
+   tags:["webhooks","idempotency","architecture"],
+   versions:[{v:"v1.0",note:"Imported from medium.com",who:"Tom B.",date:"14 Aug 2026",tag:"current"}],
+   links:[]},
+  {id:5,title:"Multi-region failover drill notes",type:"PDF",project:"Platform",icon:"▤",status:"review",updated:"updated 5d ago · Sam O.",version:"1.3",
+   excerpt:"What broke during the June drill, how long DNS propagation actually took, and the four follow-up actions still open.",
+   tags:["failover","incident","dns","drill"],
+   versions:[{v:"v1.3",note:"Follow-up actions 2 and 3 closed",who:"Sam O.",date:"27 Aug 2026",tag:"in review"},{v:"v1.0",note:"Drill notes captured",who:"Sam O.",date:"21 Jun 2026",tag:""}],
+   links:[{q:"Do we still need manual DNS cutover?",meta:"open · 4 replies"}]},
+  {id:6,title:"Rate limiting at the edge",type:"Dev.to",project:"Platform",icon:"✎",status:"current",updated:"saved by Nadia R. · 1mo ago",version:"1.0",
+   excerpt:"Token bucket vs sliding window, with the config we mirrored for the public API gateway.",
+   tags:["rate limit","gateway","api"],
+   versions:[{v:"v1.0",note:"Imported from dev.to",who:"Nadia R.",date:"29 Jul 2026",tag:"current"}],
+   links:[]},
+  {id:7,title:"Refund policy — customer-facing wording",type:"Google Doc",project:"Payments",icon:"◲",status:"current",updated:"synced from Drive · 4h ago",version:"3.1",
+   excerpt:"Approved phrasing for refund timelines by region, plus what support may and may not promise on chat.",
+   tags:["refunds","support","policy","legal"],
+   versions:[{v:"v3.1",note:"EU timeline corrected to 10 working days",who:"Legal",date:"01 Sep 2026",tag:"current"},{v:"v3.0",note:"Region table restructured",who:"Priya M.",date:"08 Aug 2026",tag:""}],
+   links:[{q:"Can support promise same-day refunds for card errors?",meta:"answered · 5 replies"}]}
+];
+
+export const THREADS = [
+  {id:101,q:"Why do payouts stall at 'pending_capture'?",project:"Payments",status:"answered",
+   preview:"Seeing ~30 payouts stuck for over an hour. Nothing in the dead-letter queue.",
+   body:"Since Tuesday we see around thirty payouts sitting in pending_capture for more than an hour. The dead-letter queue is empty and the processor logs look clean.",
+   answer:"That state means the capture webhook never came back. Replay it with `atlas-ingest replay --state pending_capture --since 1h`; anything older than 24h needs a manual capture in the provider console. Runbook §4 has the exact ladder.",
+   answerMeta:"Nadia R. · accepted by Tom B. · 12 upvotes",
+   meta:"6 replies · 2d ago · linked to runbook v4.2",
+   replies:[{body:"Confirmed — replay cleared 28 of the 30 for us.",who:"Sam O."},{body:"The remaining two were older than 24h, manual capture worked.",who:"Tom B."}]},
+  {id:102,q:"Which accounts are auto-provisioned after the SSO migration?",project:"People",status:"answered",
+   preview:"The onboarding doc still lists manual Jira and Figma steps.",
+   body:"New hire started Monday and the checklist told me to create Jira and Figma accounts manually, but they already existed.",
+   answer:"Everything in the Google group is provisioned automatically now: Jira, Figma, Slack and Notion. Only the VPN profile and the provider console still need a manual request. The onboarding doc is stale — I've marked it outdated.",
+   answerMeta:"Priya M. · accepted by Ana K. · 8 upvotes",
+   meta:"2 replies · 5d ago · marked a doc outdated",
+   replies:[{body:"Also worth noting the VPN request takes ~1 business day.",who:"Sam O."}]},
+  {id:103,q:"How do I add a new parser plugin to atlas-ingest?",project:"Platform",status:"answered",
+   preview:"Want to index Confluence exports without patching the core.",
+   body:"We have a pile of Confluence HTML exports. Can I add a parser without forking the ingest service?",
+   answer:"Drop a module in `parsers/` exporting `match(file)` and `parse(buffer)`, then register it in `parsers/index.js`. The CLI picks it up on next boot — no core changes. README §Parser plugins has a worked example.",
+   answerMeta:"Tom B. · accepted by Ravi S. · 5 upvotes",
+   meta:"3 replies · 1w ago · linked to README v1.9",
+   replies:[{body:"Note the buffer is streamed for files >20MB.",who:"Nadia R."}]},
+  {id:104,q:"Do we still need a manual DNS cutover for failover?",project:"Platform",status:"open",
+   preview:"Drill notes say yes, but the new health checks might handle it.",
+   body:"The June drill notes describe a manual cutover step. With the new Route53 health checks, is that still required?",
+   answer:"",answerMeta:"",
+   meta:"4 replies · open · 3d ago",
+   replies:[{body:"Health checks cover the api zone only — static assets are still manual.",who:"Sam O."},{body:"Proposing we close this once follow-up action 4 lands.",who:"Nadia R."}]}
+];
+
+export const PROJECTS = [
+  {name:"All projects",color:"#a9b4ff"},{name:"Platform",color:"#8b7bff"},
+  {name:"Payments",color:"#38d0d6"},{name:"People",color:"#ff6aa8"},{name:"Design",color:"#ffb058"}
+];
+
+export const PILL = "height:32px;padding:0 14px;border-radius:11px;cursor:pointer;font-size:12.5px;font-weight:500;transition:background .15s ease;";
+export const NAVBTN = "display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:13px;cursor:pointer;font-size:13.5px;font-weight:500;text-align:left;transition:background .15s ease;";
