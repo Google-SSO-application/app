@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import El from "../../lib/El.jsx";
+import { documents } from "../../api/index.js";
 
 export default function UploadModal({ closePanel, stop, projectChips, target, onUploaded }) {
   const fileInputRef = useRef(null);
@@ -75,17 +76,10 @@ export default function UploadModal({ closePanel, stop, projectChips, target, on
       try {
         // Run batch promises for concurrent file transfers
         const uploadPromises = selectedFiles.map(async (file) => {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("title", file.name.replace(/\.[^/.]+$/, "")); // Strip extension for clean title
+          const title = file.name.replace(/\.[^/.]+$/, ""); // Strip extension for clean title
+          const project = activeProject?.name || target;
           
-          formData.append("project", activeProject?.name || target);
-          // if a reviewer selection drop-down is built, append reviewer_id here
-
-          const response = await fetch("/web/docs/upload", {
-            method: "POST",
-            body: formData, // Browser sets boundary & multipart headers automatically
-          });
+          const response = await documents.uploadDocument(file, title, project);
 
           if (!response.ok) {
             const errText = await response.text();

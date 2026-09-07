@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { DOCS, THREADS, PROJECTS, PILL, NAVBTN } from "../data.js";
 import { badge } from "../lib/badge.js";
+import { auth, documents } from "../api/index.js";
 
 export function useAppState() {
   const [state, setState] = useState({
@@ -44,14 +45,11 @@ export function useAppState() {
     let active = true;
     const loadSession = async () => {
       try {
-        let response = await fetch("/web/me", { credentials: "include" });
+        let response = await auth.getSession();
         if (response.status === 401) {
-          const refresh = await fetch("/web/auth/refresh", {
-            method: "POST",
-            credentials: "include",
-          });
+          const refresh = await auth.refreshToken();
           if (refresh.ok) {
-            response = await fetch("/web/me", { credentials: "include" });
+            response = await auth.getSession();
           }
         }
         if (!active) return;
@@ -70,10 +68,10 @@ export function useAppState() {
     setUploadsLoading(true);
     setUploadsError("");
     try {
-      const response = await fetch("/web/docs/dashboard", { credentials: "include" });
+      const response = await documents.getDashboard();
       if (!response.ok) throw new Error("Unable to load your uploads.");
-      const documents = await response.json();
-      setUploadedDocs(Array.isArray(documents) ? documents.map((document) => ({
+      const docs = await response.json();
+      setUploadedDocs(Array.isArray(docs) ? docs.map((document) => ({
         ...document,
         projectName: document.projectName || document.project_name || "Unassigned",
         fileType: document.fileType || document.file_type || "",
@@ -313,7 +311,7 @@ export function useAppState() {
   const signIn = () => window.location.assign("/web/auth/google/login");
 
   const signOut = async () => {
-    await fetch("/web/auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
+    await auth.logout();
     set({ signedIn: false, docId: null, threadId: null, upload: false, ask: false });
   };
 
