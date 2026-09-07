@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/codimite-learning/knowledge-hub/internal/authz"
+	"github.com/codimite-learning/knowledge-hub/internal/docs"
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/store"
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 	"github.com/codimite-learning/knowledge-hub/internal/users"
@@ -39,7 +40,7 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 	defer pgPool.Close()
-
+	
 	if err := store.RunMigrations(ctx, pgPool); err != nil {
 		return err
 	}
@@ -54,6 +55,11 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 
+	localStorage, err := docs.NewLocalStorage(cfg.UploadDir)
+	if err != nil {
+		return err
+	}
+
 	// domain (users)
 	userRepo := users.NewPostgresRepository(pgPool)
 	userService := users.NewService(userRepo)
@@ -63,6 +69,11 @@ func run(logger *slog.Logger) error {
 	tokenStore := authz.NewRedisTokenStore(redisClient)
 	accessIssuer := authz.NewAccessTokenIssuer(tokenStore, cfg.AccessTokenTTL)
 	refreshIssuer := authz.NewRefreshTokenIssuer(cfg.JWTRefreshSecret, cfg.RefreshTokenTTL)
+
+	// domain (docs)
+	docRepo := docs.NewPostgresRepository(pgPool)
+	docService := docs.NewService(docRepo, localStorage)
+	docHandler := docs.NewHttpHandler(docService)
 
 	authHandler := authz.NewHandler(googleOAuth, userService, accessIssuer, refreshIssuer, types.HandlerConfig{
 		FrontendURL:  cfg.FrontendURL,
@@ -76,7 +87,7 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 
-	r := web.NewRouter(authHandler, accessIssuer, spaHandler)
+	r := web.NewRouter(authHandler, accessIssuer, spaHandler, docHandler, cfg.UploadDir)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

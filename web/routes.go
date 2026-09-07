@@ -8,9 +8,10 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 
 	"github.com/codimite-learning/knowledge-hub/internal/authz"
+	"github.com/codimite-learning/knowledge-hub/internal/docs"
 )
 
-func NewRouter(authHandler *authz.Handler, accessIssuer *authz.AccessTokenIssuer, spaHandler http.Handler) http.Handler {
+func NewRouter(authHandler *authz.Handler, accessIssuer *authz.AccessTokenIssuer, spaHandler http.Handler, docsHandler *docs.HttpHandler, uploadDir string) http.Handler {
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
@@ -28,6 +29,9 @@ func NewRouter(authHandler *authz.Handler, accessIssuer *authz.AccessTokenIssuer
 		r.Group(func(r chi.Router) {
 			r.Use(authz.RequireAuth)
 			r.Get("/me", authHandler.HandleMe)
+
+			r.Post("/docs/upload", docsHandler.UploadHandler)
+			r.Get("/docs/dashboard", docsHandler.ListUserDocsHandler)
 		})
 	})
 

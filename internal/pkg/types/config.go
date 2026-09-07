@@ -31,6 +31,8 @@ type Config struct {
 	JWTRefreshSecret string
 	AccessTokenTTL   time.Duration
 	RefreshTokenTTL  time.Duration
+
+	UploadDir string
 }
 
 func LoadConfig() (*Config, error) {
@@ -58,6 +60,8 @@ func LoadConfig() (*Config, error) {
 		JWTRefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
 		AccessTokenTTL:   getEnvDuration("ACCESS_TOKEN_TTL", 15*time.Minute),
 		RefreshTokenTTL:  getEnvDuration("REFRESH_TOKEN_TTL", 7*24*time.Hour),
+
+		UploadDir: getEnv("UPLOAD_DIR", "./.data/uploads"),
 	}
 
 	if cfg.PostgresDSN == "" {

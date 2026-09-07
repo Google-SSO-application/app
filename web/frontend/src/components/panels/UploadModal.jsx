@@ -6,6 +6,7 @@ export default function UploadModal({ closePanel, stop, projectChips, target }) 
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [urlInput, setUrlInput] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   // Open file browser on click
   const handleDropzoneClick = () => {
@@ -65,12 +66,53 @@ export default function UploadModal({ closePanel, stop, projectChips, target }) 
     setSelectedFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
-  const handleAddAction = () => {
-    console.log("Submitting URLs:", urlInput);
-    console.log("Submitting Files:", selectedFiles);
-    // TODO: Perform your actual upload logic / context update here
-    closePanel();
-  };
+  const handleAddAction = async () => {
+    const activeProject = projectChips.find((c) => c.active);
+    
+    // Process File Uploads if files are queued
+    if (selectedFiles.length > 0) {
+      setIsUploading(true);
+      try {
+        // Run batch promises for concurrent file transfers
+        const uploadPromises = selectedFiles.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("title", file.name.replace(/\.[^/.]+$/, "")); // Strip extension for clean title
+          
+          if (activeProject?.id) {
+            formData.append("project_id", activeProject.id);
+          }
+          // if a reviewer selection drop-down is built, append reviewer_id here
+
+          const response = await fetch("/web/docs/upload", {
+            method: "POST",
+            body: formData, // Browser sets boundary & multipart headers automatically
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || `Failed to upload ${file.name}`);
+          }
+          return response.json();
+        });
+
+        await Promise.all(uploadPromises);
+        closePanel();
+      } catch (err) {
+        alert(`Upload error: ${err.message}`);
+      } finally {
+        setIsUploading(false);
+      }
+      return;
+    }
+
+    // Fallback: Process URL Link Indexing instead
+    if (urlInput.trim() !== "") {
+      console.log("Submitting URL target mapping:", urlInput);
+      // Execute alternative link registration payload here if required
+      closePanel();
+    };
+  }
 
   return (
     <div onClick={closePanel} style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(4,5,12,.6)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 20, overflowY: "auto" }}>

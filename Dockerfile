@@ -22,5 +22,6 @@ FROM alpine:3.19
 RUN apk add --no-cache ca-certificates
 WORKDIR /
 COPY --from=backend-build /khub /khub
+RUN mkdir -p /data/uploads
 EXPOSE 8080
 ENTRYPOINT ["/khub"]

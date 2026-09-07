@@ -57,9 +57,13 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL}
       REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL}
+      UPLOAD_DIR: ${UPLOAD_DIR}
     ports:
       - "8080:8080"
+    volumes:
+      - khub-uploads:/data/uploads
 
 volumes:
   pgdata:
   redisdata:
+  khub-uploads:
