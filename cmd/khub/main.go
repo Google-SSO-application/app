@@ -44,7 +44,7 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 
-	redisClient := store.NewRedisClient(store.RedisConfig{
+	redisClient := store.NewRedisClient(types.RedisConfig{
 		Addr:     cfg.RedisAddr,
 		Password: cfg.RedisPassword,
 		DB:       cfg.RedisDB,
@@ -64,7 +64,7 @@ func run(logger *slog.Logger) error {
 	accessIssuer := authz.NewAccessTokenIssuer(tokenStore, cfg.AccessTokenTTL)
 	refreshIssuer := authz.NewRefreshTokenIssuer(cfg.JWTRefreshSecret, cfg.RefreshTokenTTL)
 
-	authHandler := authz.NewHandler(googleOAuth, userService, accessIssuer, refreshIssuer, authz.HandlerConfig{
+	authHandler := authz.NewHandler(googleOAuth, userService, accessIssuer, refreshIssuer, types.HandlerConfig{
 		FrontendURL:  cfg.FrontendURL,
 		CookieDomain: cfg.CookieDomain,
 		CookieSecure: cfg.CookieSecure,

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -11,11 +12,6 @@ import (
 var ErrInvalidRefreshToken = errors.New("invalid or expired refresh token")
 
 // JWT payload for refresh tokens.
-type RefreshClaims struct {
-	Email string `json:"email"`
-	jwt.RegisteredClaims
-}
-
 // RefreshTokenIssuer mints and validates JWT refresh tokens.
 type RefreshTokenIssuer struct {
 	secret []byte
@@ -31,7 +27,7 @@ func (r *RefreshTokenIssuer) TTL() time.Duration { return r.ttl }
 // Issue signs a new refresh JWT for the given user.
 func (r *RefreshTokenIssuer) Issue(userID uuid.UUID, email string) (string, error) {
 	now := time.Now()
-	claims := RefreshClaims{
+	claims := types.RefreshClaims{
 		Email: email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID.String(),
@@ -45,7 +41,7 @@ func (r *RefreshTokenIssuer) Issue(userID uuid.UUID, email string) (string, erro
 
 // Validate parses and verifies a refresh JWT, returns the user ID
 func (r *RefreshTokenIssuer) Validate(tokenStr string) (uuid.UUID, string, error) {
-	claims := &RefreshClaims{}
+	claims := &types.RefreshClaims{}
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidRefreshToken

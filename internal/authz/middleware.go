@@ -5,30 +5,23 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
+	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 )
 
 type ctxKey string
 
 const authContextKey ctxKey = "khub_auth_context"
 
-type AuthContext struct {
-	Authenticated bool
-	UserID        uuid.UUID
-	Email         string
-	Role          string
-}
-
-func withAuthContext(ctx context.Context, ac AuthContext) context.Context {
+func withAuthContext(ctx context.Context, ac types.AuthContext) context.Context {
 	return context.WithValue(ctx, authContextKey, ac)
 }
 
 // FromContext reads the AuthContext previously attached by Middleware.
-func FromContext(ctx context.Context) AuthContext {
-	if ac, ok := ctx.Value(authContextKey).(AuthContext); ok {
+func FromContext(ctx context.Context) types.AuthContext {
+	if ac, ok := ctx.Value(authContextKey).(types.AuthContext); ok {
 		return ac
 	}
-	return AuthContext{}
+	return types.AuthContext{}
 }
 
 // Middleware resolves the opaque access-token cookie (if any) against the
@@ -37,11 +30,11 @@ func FromContext(ctx context.Context) AuthContext {
 func Middleware(issuer *AccessTokenIssuer) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ac := AuthContext{}
+			ac := types.AuthContext{}
 
 			if cookie, err := r.Cookie(AccessTokenCookieName); err == nil && cookie.Value != "" {
 				if sess, verr := issuer.Validate(r.Context(), cookie.Value); verr == nil {
-					ac = AuthContext{
+					ac = types.AuthContext{
 						Authenticated: true,
 						UserID:        sess.UserID,
 						Email:         sess.Email,

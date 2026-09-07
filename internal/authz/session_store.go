@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
@@ -15,7 +16,7 @@ type redisTokenStore struct {
 	client *redis.Client
 }
 
-func NewRedisTokenStore(client *redis.Client) TokenStore {
+func NewRedisTokenStore(client *redis.Client) types.TokenStore {
 	return &redisTokenStore{client: client}
 }
 
@@ -29,7 +30,7 @@ func sessionKey(token string) string {
 	return "khub:session:" + token
 }
 
-func (s *redisTokenStore) SaveSession(ctx context.Context, token string, sess Session, ttl time.Duration) error {
+func (s *redisTokenStore) SaveSession(ctx context.Context, token string, sess types.Session, ttl time.Duration) error {
 	rec := sessionRecord{
 		UserID: sess.UserID.String(),
 		Email:  sess.Email,
@@ -42,24 +43,24 @@ func (s *redisTokenStore) SaveSession(ctx context.Context, token string, sess Se
 	return s.client.Set(ctx, sessionKey(token), data, ttl).Err()
 }
 
-func (s *redisTokenStore) GetSession(ctx context.Context, token string) (Session, error) {
+func (s *redisTokenStore) GetSession(ctx context.Context, token string) (types.Session, error) {
 	data, err := s.client.Get(ctx, sessionKey(token)).Bytes()
 	if errors.Is(err, redis.Nil) {
-		return Session{}, ErrSessionNotFound
+		return types.Session{}, ErrSessionNotFound
 	}
 	if err != nil {
-		return Session{}, err
+		return types.Session{}, err
 	}
 
 	var rec sessionRecord
 	if err := json.Unmarshal(data, &rec); err != nil {
-		return Session{}, err
+		return types.Session{}, err
 	}
 	userID, err := uuid.Parse(rec.UserID)
 	if err != nil {
-		return Session{}, err
+		return types.Session{}, err
 	}
-	return Session{UserID: userID, Email: rec.Email, Role: rec.Role}, nil
+	return types.Session{UserID: userID, Email: rec.Email, Role: rec.Role}, nil
 }
 
 func (s *redisTokenStore) DeleteSession(ctx context.Context, token string) error {

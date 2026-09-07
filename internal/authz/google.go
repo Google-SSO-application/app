@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -53,21 +54,12 @@ func (g *GoogleOAuth) Exchange(ctx context.Context, code string) (*oauth2.Token,
 }
 
 // GoogleUserInfo is the subset of the OIDC userinfo response we care about.
-type GoogleUserInfo struct {
-	Sub           string `json:"sub"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Name          string `json:"name"`
-	Picture       string `json:"picture"`
-	HD            string `json:"hd"`
-}
-
 const googleUserInfoURL = "https://openidconnect.googleapis.com/v1/userinfo"
 
 // FetchUserInfo calls Google's userinfo endpoint using the token we just
 // received directly from Google's token endpoint over TLS, then enforces
 // the allowed-domain acceptance criterion.
-func (g *GoogleOAuth) FetchUserInfo(ctx context.Context, tok *oauth2.Token) (*GoogleUserInfo, error) {
+func (g *GoogleOAuth) FetchUserInfo(ctx context.Context, tok *oauth2.Token) (*types.GoogleUserInfo, error) {
 	client := g.config.Client(ctx, tok)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, googleUserInfoURL, nil)
@@ -85,7 +77,7 @@ func (g *GoogleOAuth) FetchUserInfo(ctx context.Context, tok *oauth2.Token) (*Go
 		return nil, fmt.Errorf("userinfo request failed: %s: %s", resp.Status, string(body))
 	}
 
-	var info GoogleUserInfo
+	var info types.GoogleUserInfo
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
 		return nil, err
 	}
