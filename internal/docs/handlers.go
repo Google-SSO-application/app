@@ -3,6 +3,8 @@ package docs
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
+
 	"github.com/google/uuid"
 
 	"github.com/codimite-learning/knowledge-hub/internal/authz"
@@ -23,13 +25,13 @@ func (h *HttpHandler) UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := authz.FromContext(r.Context())
-	
-		// Double check fallback security safety net
+
+	// Double check fallback security safety net
 	if !authCtx.Authenticated || authCtx.UserID == uuid.Nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	
+
 	ownerID := authCtx.UserID
 
 	r.Body = http.MaxBytesReader(w, r.Body, 50*1024*1024)
@@ -45,10 +47,20 @@ func (h *HttpHandler) UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	projectCategory := strings.TrimSpace(r.FormValue("project"))
+	if !validProjectCategory(projectCategory) {
+		http.Error(w, "Invalid project category", http.StatusBadRequest)
+		return
+	}
+
 	projectIDStr := r.FormValue("project_id")
 	var projectID *uuid.UUID
 	if projectIDStr != "" {
-		projectUUID := uuid.MustParse(projectIDStr)
+		projectUUID, err := uuid.Parse(projectIDStr)
+		if err != nil {
+			http.Error(w, "Invalid project", http.StatusBadRequest)
+			return
+		}
 		projectID = &projectUUID
 	}
 
@@ -64,7 +76,7 @@ func (h *HttpHandler) UploadHandler(w http.ResponseWriter, r *http.Request) {
 		title = header.Filename
 	}
 
-	doc, err := h.s.Upload(r.Context(), ownerID, title, projectID, reviewerID, header.Filename, file)
+	doc, err := h.s.Upload(r.Context(), ownerID, title, projectID, projectCategory, reviewerID, header.Filename, file)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -73,6 +85,15 @@ func (h *HttpHandler) UploadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(doc)
+}
+
+func validProjectCategory(category string) bool {
+	switch category {
+	case "Platform", "Payments", "People", "Design":
+		return true
+	default:
+		return false
+	}
 }
 
 func (h *HttpHandler) ListUserDocsHandler(w http.ResponseWriter, r *http.Request) {

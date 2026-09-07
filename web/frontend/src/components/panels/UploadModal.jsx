@@ -79,9 +79,7 @@ export default function UploadModal({ closePanel, stop, projectChips, target, on
           formData.append("file", file);
           formData.append("title", file.name.replace(/\.[^/.]+$/, "")); // Strip extension for clean title
           
-          if (activeProject?.id) {
-            formData.append("project_id", activeProject.id);
-          }
+          formData.append("project", activeProject?.name || target);
           // if a reviewer selection drop-down is built, append reviewer_id here
 
           const response = await fetch("/web/docs/upload", {

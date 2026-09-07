@@ -75,6 +75,7 @@ export function useAppState() {
       const documents = await response.json();
       setUploadedDocs(Array.isArray(documents) ? documents.map((document) => ({
         ...document,
+        projectName: document.projectName || document.project_name || "Unassigned",
         fileType: document.fileType || document.file_type || "",
         fileName: document.fileName || document.file_name || document.title || "Untitled document",
         createdAt: document.createdAt || document.created_at || "",
@@ -254,6 +255,7 @@ export function useAppState() {
   // ── project chips (modals) ────────────────────────────────────────────────
   const projectChips = PROJECTS.slice(1).map((p) => ({
     name: p.name,
+    active: s.target === p.name,
     style:
       PILL +
       (s.target === p.name

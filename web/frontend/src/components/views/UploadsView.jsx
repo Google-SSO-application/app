@@ -90,7 +90,7 @@ export default function UploadsView({ documents = [], loading, error, refresh, o
               </div>
               <div style={{ marginTop: 6, fontSize: 12.5, color: "rgba(238,240,255,.58)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.fileName}</div>
               <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11.5, color: "rgba(238,240,255,.45)", fontFamily: "'DM Mono',monospace" }}>
-                <span>{(doc.fileType || "file").toUpperCase()}</span><span>·</span><span>uploaded {formatDate(doc.createdAt)}</span>
+                <span>{doc.projectName || "Unassigned"}</span><span>·</span><span>{(doc.fileType || "file").toUpperCase()}</span><span>·</span><span>uploaded {formatDate(doc.createdAt)}</span>
               </div>
             </div>
           </El>
