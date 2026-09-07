@@ -22,6 +22,9 @@ export function useAppState() {
     outdated: { 3: true },
     target: "Platform",
   });
+  const [uploadedDocs, setUploadedDocs] = useState([]);
+  const [uploadsLoading, setUploadsLoading] = useState(false);
+  const [uploadsError, setUploadsError] = useState("");
 
   const set = useCallback((o) => setState((s) => ({ ...s, ...o })), []);
   const s = state;
@@ -61,6 +64,31 @@ export function useAppState() {
     loadSession();
     return () => { active = false; };
   }, [set]);
+
+  const refreshUploadedDocs = useCallback(async () => {
+    if (!state.signedIn) return;
+    setUploadsLoading(true);
+    setUploadsError("");
+    try {
+      const response = await fetch("/web/docs/dashboard", { credentials: "include" });
+      if (!response.ok) throw new Error("Unable to load your uploads.");
+      const documents = await response.json();
+      setUploadedDocs(Array.isArray(documents) ? documents.map((document) => ({
+        ...document,
+        fileType: document.fileType || document.file_type || "",
+        fileName: document.fileName || document.file_name || document.title || "Untitled document",
+        createdAt: document.createdAt || document.created_at || "",
+      })) : []);
+    } catch (error) {
+      setUploadsError(error.message || "Unable to load your uploads.");
+    } finally {
+      setUploadsLoading(false);
+    }
+  }, [state.signedIn]);
+
+  useEffect(() => {
+    if (state.authReady && state.signedIn) refreshUploadedDocs();
+  }, [state.authReady, state.signedIn, refreshUploadedDocs]);
 
   // ── helpers ──────────────────────────────────────────────────────────────
   const statusOf = (d) =>
@@ -145,6 +173,7 @@ export function useAppState() {
     ["search",  "⌕", "Search",  DOCS.length],
     ["threads", "◇", "Threads", THREADS.length],
     ["sources", "⧉", "Sources", 5],
+    ["uploads", "⤒", "My uploads", uploadedDocs.length],
   ];
 
   const nav = navItems.map(([id, icon, label, count]) => ({
@@ -257,6 +286,7 @@ export function useAppState() {
   const openUpload  = () => set({ upload: true, target: s.project === "All projects" ? s.target : s.project });
   const openAsk     = () => set({ ask:    true, target: s.project === "All projects" ? s.target : s.project });
   const goSources   = () => set({ view: "sources", navOpen: narrow ? false : true });
+  const goUploads   = () => set({ view: "uploads", navOpen: narrow ? false : true });
   const closePanel  = () => set({ docId: null, threadId: null, upload: false, ask: false });
   const toggleNav   = () => set(narrow ? { navOpen: !s.navOpen } : { collapsed: !s.collapsed });
   const stop        = (e) => e.stopPropagation();
@@ -295,6 +325,7 @@ export function useAppState() {
     isSearch:  s.view === "search",
     isThreads: s.view === "threads",
     isSources: s.view === "sources",
+    isUploads: s.view === "uploads",
     // search
     query: s.query,
     onQuery: (e) => set({ query: e.target.value }),
@@ -315,6 +346,10 @@ export function useAppState() {
     // lists
     threads,
     sources,
+    uploadedDocs,
+    uploadsLoading,
+    uploadsError,
+    refreshUploadedDocs,
     // modals
     projectChips,
     target: s.target,
@@ -325,7 +360,7 @@ export function useAppState() {
     outdatedBtnLabel, outdatedBtnStyle,
     // handlers
     toggleNav, toggleOutdated,
-    openUpload, openAsk, goSources, closePanel, stop,
+    openUpload, openAsk, goSources, goUploads, closePanel, stop,
     // auth
     signedIn, signedOut,
     signIn, signOut,

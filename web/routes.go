@@ -33,6 +33,9 @@ func NewRouter(authHandler *authz.Handler, accessIssuer *authz.AccessTokenIssuer
 			r.Post("/docs/upload", docsHandler.UploadHandler)
 			r.Get("/docs/dashboard", docsHandler.ListUserDocsHandler)
 		})
+
+		fileServer := http.FileServer(http.Dir(uploadDir))
+		r.Handle("/uploads/*", http.StripPrefix("/web/uploads", fileServer))
 	})
 
 	r.NotFound(spaHandler.ServeHTTP)

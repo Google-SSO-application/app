@@ -7,6 +7,7 @@ import LoginPage            from "./components/views/LoginPage.jsx";
 import SearchView           from "./components/views/SearchView.jsx";
 import ThreadsView          from "./components/views/ThreadsView.jsx";
 import SourcesView          from "./components/views/SourcesView.jsx";
+import UploadsView          from "./components/views/UploadsView.jsx";
 import DocPanel             from "./components/panels/DocPanel.jsx";
 import ThreadPanel          from "./components/panels/ThreadPanel.jsx";
 import UploadModal          from "./components/panels/UploadModal.jsx";
@@ -83,6 +84,15 @@ export default function App() {
               {v.isSources && (
                 <SourcesView sources={v.sources} openUpload={v.openUpload} />
               )}
+              {v.isUploads && (
+                <UploadsView
+                  documents={v.uploadedDocs}
+                  loading={v.uploadsLoading}
+                  error={v.uploadsError}
+                  refresh={v.refreshUploadedDocs}
+                  openUpload={v.openUpload}
+                />
+              )}
             </main>
           </div>
         </div>
@@ -91,7 +101,7 @@ export default function App() {
       {/* Panels & modals — rendered outside the shell so they overlay everything */}
       {v.docOpen    && <DocPanel    docV={v.docV} closePanel={v.closePanel} toggleOutdated={v.toggleOutdated} outdatedBtnLabel={v.outdatedBtnLabel} outdatedBtnStyle={v.outdatedBtnStyle} />}
       {v.threadOpen && <ThreadPanel threadV={v.threadV} closePanel={v.closePanel} />}
-      {v.uploadOpen && <UploadModal closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} />}
+      {v.uploadOpen && <UploadModal closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} onUploaded={v.refreshUploadedDocs} />}
       {v.askOpen    && <AskModal    closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} />}
 
     </div>

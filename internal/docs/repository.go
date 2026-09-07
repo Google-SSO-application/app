@@ -44,7 +44,7 @@ func (r *PostgresRepository) GetDocsByOwner(ctx context.Context, ownerID uuid.UU
 	}
 	defer rows.Close()
 
-	var docs []types.Document
+	docs := make([]types.Document, 0)
 	for rows.Next() {
 		var d types.Document
 		err := rows.Scan(&d.ID, &d.ProjectID, &d.OwnerID, &d.ReviewerID, &d.Title, &d.FileType, &d.FileName, &d.Status, &d.CreatedAt, &d.UpdatedAt)

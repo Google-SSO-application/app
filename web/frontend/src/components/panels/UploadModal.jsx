@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import El from "../../lib/El.jsx";
 
-export default function UploadModal({ closePanel, stop, projectChips, target }) {
+export default function UploadModal({ closePanel, stop, projectChips, target, onUploaded }) {
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -97,6 +97,7 @@ export default function UploadModal({ closePanel, stop, projectChips, target }) 
         });
 
         await Promise.all(uploadPromises);
+        await onUploaded?.();
         closePanel();
       } catch (err) {
         alert(`Upload error: ${err.message}`);
