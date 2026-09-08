@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { DOCS, THREADS, PROJECTS, PILL, NAVBTN } from "../data.js";
+import { DOCS, THREADS, PILL, NAVBTN } from "../data.js";
 import { badge } from "../lib/badge.js";
-import { auth, documents } from "../api/index.js";
+import { auth, documents, project } from "../api/index.js";
 
 export function useAppState() {
   const [state, setState] = useState({
@@ -14,6 +14,7 @@ export function useAppState() {
     threadId: null,
     upload: false,
     ask: false,
+    projectModal: false,
     signedIn: false,
     authReady: false,
     authError: "",
@@ -21,11 +22,12 @@ export function useAppState() {
     collapsed: false,
     w: 1440,
     outdated: { 3: true },
-    target: "Platform",
+    target: "",
   });
   const [uploadedDocs, setUploadedDocs] = useState([]);
   const [uploadsLoading, setUploadsLoading] = useState(false);
   const [uploadsError, setUploadsError] = useState("");
+  const [dynamicProjects, setDynamicProjects] = useState([]);
 
   const set = useCallback((o) => setState((s) => ({ ...s, ...o })), []);
   const s = state;
@@ -37,8 +39,7 @@ export function useAppState() {
     onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [set]);
 
   // ── session check ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -63,6 +64,19 @@ export function useAppState() {
     return () => { active = false; };
   }, [set]);
 
+  const refreshProjects = useCallback(async () => {
+    if (!state.signedIn) return;
+    try {
+      const response = await project.getProjects();
+      if (response.ok) {
+        const data = await response.json();
+        setDynamicProjects(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Could not fetch projects list", err);
+    }
+  }, [state.signedIn]);
+
   const refreshUploadedDocs = useCallback(async () => {
     if (!state.signedIn) return;
     setUploadsLoading(true);
@@ -86,8 +100,21 @@ export function useAppState() {
   }, [state.signedIn]);
 
   useEffect(() => {
-    if (state.authReady && state.signedIn) refreshUploadedDocs();
-  }, [state.authReady, state.signedIn, refreshUploadedDocs]);
+    if (state.authReady && state.signedIn) {
+      refreshUploadedDocs();
+      refreshProjects();
+    }
+  }, [state.authReady, state.signedIn, refreshUploadedDocs, refreshProjects]);
+
+  useEffect(() => {
+    if (dynamicProjects.length > 0 && !s.target) {
+      set({ target: dynamicProjects[0].name });
+    }
+  }, [dynamicProjects, s.target, set]);
+
+  const handlePickProject = useCallback((projectName) => {
+    set({ target: projectName });
+  }, [set]);
 
   // ── helpers ──────────────────────────────────────────────────────────────
   const statusOf = (d) =>
@@ -106,10 +133,10 @@ export function useAppState() {
 
   // ── layout flags ─────────────────────────────────────────────────────────
   const narrow = s.w < 1000;
-  const mini   = !narrow && s.collapsed;
-  const wide   = !mini;
+  const mini = !narrow && s.collapsed;
+  const wide = !mini;
 
-  const hide      = mini ? "display:none" : "flex:1 1 auto;text-align:left";
+  const hide = mini ? "display:none" : "flex:1 1 auto;text-align:left";
   const hideCount = mini
     ? "display:none"
     : "font-family:'DM Mono',monospace;font-size:11px;opacity:.5";
@@ -119,8 +146,8 @@ export function useAppState() {
     narrow && !s.navOpen
       ? "display:none"
       : narrow
-      ? "position:fixed;left:12px;right:12px;top:70px;z-index:30;max-height:76vh;overflow-y:auto"
-      : `flex:0 0 ${mini ? 68 : 262}px;position:sticky;top:88px;transition:flex-basis .22s ease`;
+        ? "position:fixed;left:12px;right:12px;top:70px;z-index:30;max-height:76vh;overflow-y:auto"
+        : `flex:0 0 ${mini ? 68 : 262}px;position:sticky;top:88px;transition:flex-basis .22s ease`;
 
   const sectionStyle = mini
     ? "display:none"
@@ -153,23 +180,23 @@ export function useAppState() {
   const doc = DOCS.find((d) => d.id === s.docId);
   const docVals = doc
     ? (() => {
-        const st = statusOf(doc);
-        const b = badge(st);
-        return { ...doc, badge: b.label, badgeStyle: b.style, isOutdated: st === "outdated" };
-      })()
+      const st = statusOf(doc);
+      const b = badge(st);
+      return { ...doc, badge: b.label, badgeStyle: b.style, isOutdated: st === "outdated" };
+    })()
     : null;
 
   const th = THREADS.find((t) => t.id === s.threadId);
   const thVals = th
     ? (() => {
-        const b = badge(th.status);
-        return { ...th, badge: b.label, badgeStyle: b.style };
-      })()
+      const b = badge(th.status);
+      return { ...th, badge: b.label, badgeStyle: b.style };
+    })()
     : null;
 
   // ── nav items ────────────────────────────────────────────────────────────
   const navItems = [
-    ["search",  "⌕", "Search",  DOCS.length],
+    ["search", "⌕", "Search", DOCS.length],
     ["threads", "◇", "Threads", THREADS.length],
     ["sources", "⧉", "Sources", 5],
     ["uploads", "⤒", "My uploads", uploadedDocs.length],
@@ -188,22 +215,34 @@ export function useAppState() {
     go: () => set({ view: id, navOpen: narrow ? false : true }),
   }));
 
-  const projectList = PROJECTS.map((p) => ({
-    name: p.name,
-    count: p.name === "All projects"
-      ? DOCS.length
-      : DOCS.filter((d) => d.project === p.name).length,
-    labelStyle: hide,
-    countStyle: hideCount,
-    title: p.name,
-    dot: `width:8px;height:8px;border-radius:50%;background:${p.color};box-shadow:0 0 8px ${p.color}88`,
-    style:
-      NAVBTN +
-      (s.project === p.name
-        ? "background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.16)"
-        : "background:transparent;border:1px solid transparent;color:rgba(238,240,255,.7)"),
-    pick: () => set({ project: p.name, view: "search", navOpen: narrow ? false : true }),
-  }));
+  const allProjectsCombined = [
+    { id: "all", name: "All projects", color: "#8ff0c0" },
+    ...dynamicProjects
+  ];
+
+  const projectList = allProjectsCombined.map((p) => {
+    const count = p.name === "All projects"
+      ? uploadedDocs.length
+      : uploadedDocs.filter((d) => d.projectName === p.name || d.project === p.name).length;
+
+    const isCurrentSelection = s.project === p.name;
+    const dotColor = getProjectColor(p.name);
+
+    return {
+      name: p.name,
+      count: count,
+      labelStyle: hide,   
+      countStyle: hideCount,
+      title: p.name,
+      dot: `width:8px;height:8px;border-radius:50%;background:${dotColor};box-shadow:0 0 8px ${dotColor}88`,
+      style:
+        NAVBTN +
+        (isCurrentSelection
+          ? "background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.16)"
+          : "background:transparent;border:1px solid transparent;color:rgba(238,240,255,.7)"),
+      pick: () => set({ project: p.name, view: "search", navOpen: narrow ? false : true }),
+    };
+  });
 
   // ── filters ──────────────────────────────────────────────────────────────
   const typeFilters = ["PDF", "README", "Google Doc", "Medium", "Dev.to"].map((t) => ({
@@ -239,19 +278,19 @@ export function useAppState() {
 
   // ── sources list ─────────────────────────────────────────────────────────
   const sources = [
-    { icon: "◲", name: "Google Drive",     detail: "3 folders · auto-sync hourly", action: "Sync now"    },
-    { icon: "›_", name: "GitHub READMEs",  detail: "12 repos · on push",           action: "Configure"   },
-    { icon: "✎",  name: "Medium",          detail: "Saved links · manual",         action: "Add link"    },
-    { icon: "✎",  name: "Dev.to",          detail: "Saved links · manual",         action: "Add link"    },
-    { icon: "◇",  name: "Accepted answers",detail: "68 threads indexed",           action: "View rules"  },
+    { icon: "◲", name: "Google Drive", detail: "3 folders · auto-sync hourly", action: "Sync now" },
+    { icon: "›_", name: "GitHub READMEs", detail: "12 repos · on push", action: "Configure" },
+    { icon: "✎", name: "Medium", detail: "Saved links · manual", action: "Add link" },
+    { icon: "✎", name: "Dev.to", detail: "Saved links · manual", action: "Add link" },
+    { icon: "◇", name: "Accepted answers", detail: "68 threads indexed", action: "View rules" },
   ].map((x) => ({
     ...x,
     dotStyle: "width:8px;height:8px;border-radius:50%;background:#5fe3a1;box-shadow:0 0 10px #5fe3a1",
     act: () => set({ view: "sources" }),
   }));
 
-  // ── project chips (modals) ────────────────────────────────────────────────
-  const projectChips = PROJECTS.slice(1).map((p) => ({
+  // ── project chips (modals) ── REMAPPED TO DYNAMIC DATABASE ARRAY ───────
+  const projectChips = dynamicProjects.map((p) => ({
     name: p.name,
     active: s.target === p.name,
     style:
@@ -259,7 +298,7 @@ export function useAppState() {
       (s.target === p.name
         ? "background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.3)"
         : "background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(238,240,255,.72)"),
-    pick: () => set({ target: p.name }),
+    pick: () => handlePickProject(p.name),
   }));
 
   // ── suggestions ──────────────────────────────────────────────────────────
@@ -270,26 +309,34 @@ export function useAppState() {
 
   // ── login feature points ─────────────────────────────────────────────────
   const loginPoints = [
-    { icon: "⌕", t: "One search box",     d: "PDFs, READMEs, Drive docs, Medium and dev.to saves — and every accepted answer." },
+    { icon: "⌕", t: "One search box", d: "PDFs, READMEs, Drive docs, Medium and dev.to saves — and every accepted answer." },
     { icon: "◇", t: "Ask when search fails", d: "Threads route to the people who own the area; accepted answers get indexed." },
-    { icon: "⧗", t: "Trust what you find",   d: "Version history on every doc, and anything stale is flagged outdated." },
+    { icon: "⧗", t: "Trust what you find", d: "Version history on every doc, and anything stale is flagged outdated." },
   ];
 
   // ── panel / modal helpers ────────────────────────────────────────────────
-  const docOpen    = !!docVals;
-  const docV       = docVals || { versions: [], links: [] };
+  const docOpen = !!docVals;
+  const docV = docVals || { versions: [], links: [] };
   const threadOpen = !!thVals;
-  const threadV    = thVals  || { replies: [] };
+  const threadV = thVals || { replies: [] };
   const uploadOpen = s.upload;
-  const askOpen    = s.ask;
+  const askOpen = s.ask;
 
-  const openUpload  = () => set({ upload: true, target: s.project === "All projects" ? s.target : s.project });
-  const openAsk     = () => set({ ask:    true, target: s.project === "All projects" ? s.target : s.project });
-  const goSources   = () => set({ view: "sources", navOpen: narrow ? false : true });
-  const goUploads   = () => set({ view: "uploads", navOpen: narrow ? false : true });
-  const closePanel  = () => set({ docId: null, threadId: null, upload: false, ask: false });
-  const toggleNav   = () => set(narrow ? { navOpen: !s.navOpen } : { collapsed: !s.collapsed });
-  const stop        = (e) => e.stopPropagation();
+  const openUpload = () => {
+    const fallbackTarget = dynamicProjects.length > 0 ? dynamicProjects[0].name : "";
+    set({ 
+      upload: true, 
+      target: s.project === "All projects" ? (s.target || fallbackTarget) : s.project 
+    });
+  };
+
+  const openProjectModal = () => set({ projectModal: true });
+  const openAsk = () => set({ ask: true, target: s.project === "All projects" ? s.target : s.project });
+  const goSources = () => set({ view: "sources", navOpen: narrow ? false : true });
+  const goUploads = () => set({ view: "uploads", navOpen: narrow ? false : true });
+  const closePanel = () => set({ docId: null, threadId: null, upload: false, ask: false, projectModal: false });
+  const toggleNav = () => set(narrow ? { navOpen: !s.navOpen } : { collapsed: !s.collapsed });
+  const stop = (e) => e.stopPropagation();
 
   const toggleOutdated = () => {
     if (!doc) return;
@@ -305,7 +352,7 @@ export function useAppState() {
       : "border:1px solid rgba(255,176,88,.4);background:rgba(255,176,88,.16);color:#ffcf94");
 
   // ── auth ─────────────────────────────────────────────────────────────────
-  const signedIn  = s.signedIn;
+  const signedIn = s.signedIn;
   const signedOut = s.authReady && !s.signedIn;
 
   const signIn = () => window.location.assign("/web/auth/google/login");
@@ -315,18 +362,20 @@ export function useAppState() {
     set({ signedIn: false, docId: null, threadId: null, upload: false, ask: false });
   };
 
+  // Triggers synchronization re-fetch tasks concurrently
+  const refreshAllStates = async () => {
+    await refreshUploadedDocs();
+    await refreshProjects();
+  };
+
   return {
-    // raw state flags
     s,
-    // layout
     narrow, mini, wide,
     sidebarStyle, sectionStyle, syncCardStyle,
-    // view flags
-    isSearch:  s.view === "search",
+    isSearch: s.view === "search",
     isThreads: s.view === "threads",
     isSources: s.view === "sources",
     isUploads: s.view === "uploads",
-    // search
     query: s.query,
     onQuery: (e) => set({ query: e.target.value }),
     project: s.project,
@@ -339,30 +388,37 @@ export function useAppState() {
     results,
     typeFilters,
     statusFilters,
-    // nav / sidebar
     nav,
     projectList,
     loginPoints,
-    // lists
     threads,
     sources,
     uploadedDocs,
     uploadsLoading,
     uploadsError,
-    refreshUploadedDocs,
-    // modals
+    projectModalOpen: s.projectModal,
+    refreshUploadedDocs: refreshAllStates, // Re-binded to sync both arrays
     projectChips,
     target: s.target,
-    // panels
     docOpen, docV,
     threadOpen, threadV,
     uploadOpen, askOpen,
     outdatedBtnLabel, outdatedBtnStyle,
-    // handlers
-    toggleNav, toggleOutdated,
+    toggleNav, toggleOutdated, openProjectModal,
     openUpload, openAsk, goSources, goUploads, closePanel, stop,
-    // auth
     signedIn, signedOut,
     signIn, signOut,
   };
+}
+
+function getProjectColor(name) {
+  if (name === "All projects") return "#8ff0c0";
+
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 65%, 70%)`;
 }

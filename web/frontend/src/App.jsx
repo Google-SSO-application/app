@@ -12,6 +12,7 @@ import DocPanel             from "./components/panels/DocPanel.jsx";
 import ThreadPanel          from "./components/panels/ThreadPanel.jsx";
 import UploadModal          from "./components/panels/UploadModal.jsx";
 import AskModal             from "./components/panels/AskModal.jsx";
+import ProjectCreateModal from "./components/panels/ProjectCreateModal.jsx";
 
 export default function App() {
   const v = useAppState();
@@ -63,6 +64,7 @@ export default function App() {
               mini={v.mini}
               wide={v.wide}
               goSources={v.goSources}
+              openProjectModal={v.openProjectModal}
             />
 
             <main style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
@@ -103,7 +105,7 @@ export default function App() {
       {v.threadOpen && <ThreadPanel threadV={v.threadV} closePanel={v.closePanel} />}
       {v.uploadOpen && <UploadModal closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} onUploaded={v.refreshUploadedDocs} />}
       {v.askOpen    && <AskModal    closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} />}
-
+      {v.projectModalOpen && <ProjectCreateModal closePanel={v.closePanel} stop={v.stop} onCreated={v.refreshUploadedDocs} />}
     </div>
   );
 }

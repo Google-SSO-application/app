@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS projects (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name       TEXT UNIQUE NOT NULL,
-    category   TEXT NOT NULL CHECK (category IN ('Platform', 'Payments', 'People', 'Design')),
+    description TEXT NOT NULL DEFAULT '',
+    created_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

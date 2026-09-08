@@ -47,9 +47,9 @@ func (h *HttpHandler) UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	projectCategory := strings.TrimSpace(r.FormValue("project"))
-	if !validProjectCategory(projectCategory) {
-		http.Error(w, "Invalid project category", http.StatusBadRequest)
+	projectName := strings.TrimSpace(r.FormValue("project"))
+	if projectName == "" {
+		http.Error(w, "Missing project", http.StatusBadRequest)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *HttpHandler) UploadHandler(w http.ResponseWriter, r *http.Request) {
 		title = header.Filename
 	}
 
-	doc, err := h.s.Upload(r.Context(), ownerID, title, projectID, projectCategory, reviewerID, header.Filename, file)
+	doc, err := h.s.Upload(r.Context(), ownerID, title, projectID, projectName, reviewerID, header.Filename, file)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -85,15 +85,6 @@ func (h *HttpHandler) UploadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(doc)
-}
-
-func validProjectCategory(category string) bool {
-	switch category {
-	case "Platform", "Payments", "People", "Design":
-		return true
-	default:
-		return false
-	}
 }
 
 func (h *HttpHandler) ListUserDocsHandler(w http.ResponseWriter, r *http.Request) {

@@ -3,7 +3,7 @@ import { cssToObj } from "../../lib/style.js";
 
 export default function Sidebar({
   sidebarStyle, sectionStyle, syncCardStyle,
-  nav, projectList, mini, wide, goSources,
+  nav, projectList, mini, wide, goSources, openProjectModal
 }) {
   return (
     <El as="aside" style={sidebarStyle}>
@@ -31,6 +31,34 @@ export default function Sidebar({
             </El>
           ))}
         </div>
+      </div>
+
+      <div style={cssToObj(syncCardStyle)}>
+        {mini && (
+          <button 
+            onClick={openProjectModal} 
+            title="Create new project hub"
+            style={{ width: 38, height: 38, borderRadius: 12, border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.08)", cursor: "pointer", fontSize: 16, display: "grid", placeItems: "center", color: "#8ff0c0" }}
+          >
+            +
+          </button>
+        )}
+        {wide && (
+          <div style={{ width: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600 }}>
+              Projects Workspace
+            </div>
+            <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.5, color: "rgba(238,240,255,.6)" }}>
+              Organize and group document indexes cleanly.
+            </div>
+            <button 
+              onClick={openProjectModal} 
+              style={{ marginTop: 12, width: "100%", height: 34, borderRadius: 11, border: "1px solid rgba(95,227,161,.32)", background: "rgba(95,227,161,.12)", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "#8ff0c0", transition: "all 0.15s ease" }}
+            >
+              + Add project
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={cssToObj(syncCardStyle)}>

@@ -13,6 +13,7 @@ import (
 	"github.com/codimite-learning/knowledge-hub/internal/docs"
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/store"
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
+	"github.com/codimite-learning/knowledge-hub/internal/projects"
 	"github.com/codimite-learning/knowledge-hub/internal/users"
 	"github.com/codimite-learning/knowledge-hub/web"
 )
@@ -40,7 +41,7 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 	defer pgPool.Close()
-	
+
 	if err := store.RunMigrations(ctx, pgPool); err != nil {
 		return err
 	}
@@ -75,6 +76,11 @@ func run(logger *slog.Logger) error {
 	docService := docs.NewService(docRepo, localStorage)
 	docHandler := docs.NewHttpHandler(docService)
 
+	// domain (projects)
+	projectRepo := projects.NewPostgresRepository(pgPool)
+	projectService := projects.NewService(projectRepo)
+	projectHandler := projects.NewHttpHandler(projectService)
+
 	authHandler := authz.NewHandler(googleOAuth, userService, accessIssuer, refreshIssuer, types.HandlerConfig{
 		FrontendURL:  cfg.FrontendURL,
 		CookieDomain: cfg.CookieDomain,
@@ -87,7 +93,7 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 
-	r := web.NewRouter(authHandler, accessIssuer, spaHandler, docHandler, cfg.UploadDir)
+	r := web.NewRouter(authHandler, accessIssuer, spaHandler, docHandler, projectHandler, cfg.UploadDir)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

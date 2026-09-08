@@ -21,7 +21,7 @@ func NewService(repo Repository, storage FileStorage) *Service {
 	return &Service{repo: repo, storage: storage}
 }
 
-func (u *Service) Upload(ctx context.Context, ownerID uuid.UUID, title string, projectID *uuid.UUID, projectCategory string, reviewerID *uuid.UUID, filename string, file io.Reader) (*types.Document, error) {
+func (u *Service) Upload(ctx context.Context, ownerID uuid.UUID, title string, projectID *uuid.UUID, projectName string, reviewerID *uuid.UUID, filename string, file io.Reader) (*types.Document, error) {
 	ext := strings.ToLower(filepath.Ext(filename))
 	if ext != ".pdf" && ext != ".md" {
 		return nil, errors.New("invalid file type: only .pdf and .md are allowed")
@@ -36,14 +36,14 @@ func (u *Service) Upload(ctx context.Context, ownerID uuid.UUID, title string, p
 	}
 
 	doc := &types.Document{
-		ProjectID:       projectID,
-		ProjectCategory: projectCategory,
-		OwnerID:         ownerID,
-		ReviewerID:      reviewerID,
-		Title:           title,
-		FileType:        strings.TrimPrefix(ext, "."),
-		FileName:        uniqueFilename,
-		Status:          "pending",
+		ProjectID:   projectID,
+		ProjectName: projectName,
+		OwnerID:     ownerID,
+		ReviewerID:  reviewerID,
+		Title:       title,
+		FileType:    strings.TrimPrefix(ext, "."),
+		FileName:    uniqueFilename,
+		Status:      "pending",
 	}
 
 	if err := u.repo.CreateDocument(ctx, doc, savedPath); err != nil {
