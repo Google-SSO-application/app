@@ -161,6 +161,45 @@ func (h *HttpHandler) AssignReviewerHandler(w http.ResponseWriter, r *http.Reque
 	_, _ = w.Write([]byte(`{"message":"Reviewer assigned successfully"}`))
 }
 
+func (h *HttpHandler) RemoveReviewerHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ac := authz.FromContext(r.Context())
+	if !ac.Authenticated || ac.UserID == uuid.Nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		DocumentID string `json:"document_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload body", http.StatusBadRequest)
+		return
+	}
+
+	docUUID, err := uuid.Parse(req.DocumentID)
+	if err != nil {
+		http.Error(w, "Invalid document identity uuid string format", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.s.RemoveReviewer(r.Context(), docUUID); err != nil {
+		if errors.Is(err, ErrDocumentNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`{"message":"Reviewer removed successfully"}`))
+}
+
 func (h *HttpHandler) ListReviewDocsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

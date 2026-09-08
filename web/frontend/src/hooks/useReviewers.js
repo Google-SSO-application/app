@@ -45,7 +45,27 @@ export default function useReviewers(documentId, onAssignmentSuccess, closePanel
     } finally {
       setIsSubmitting(false);
     }
-  }, [closePanel, documentId, onAssignmentSuccess]);
+  }, [closePanel, documentId, onAssignmentSuccess, showToast]);
 
-  return { teammates, loading, error, isSubmitting, assignReviewer };
+  const removeReviewer = useCallback(async () => {
+    setIsSubmitting(true);
+    setError("");
+    try {
+      const response = await documents.removeReviewer(documentId);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to remove reviewer assignment.");
+      }
+      await onAssignmentSuccess?.();
+      showToast?.("Reviewer assignment removed.");
+      closePanel();
+    } catch (err) {
+      showToast?.(err.message || "Unable to remove reviewer assignment.", "error");
+      setError(err.message || "Something went wrong removing reviewer context.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [closePanel, documentId, onAssignmentSuccess, showToast]);
+
+  return { teammates, loading, error, isSubmitting, assignReviewer, removeReviewer };
 }

@@ -33,6 +33,15 @@ export async function assignReviewer(documentId, reviewerId) {
   });
 }
 
+export async function removeReviewer(documentId) {
+  return fetch("/web/docs/remove-reviewer", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ document_id: documentId }),
+  });
+}
+
 export async function getAssignedDocuments() {
   return fetch("/web/docs/reviews", { credentials: "include" });
 }

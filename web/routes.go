@@ -14,14 +14,14 @@ import (
 )
 
 func NewRouter(
-		authHandler *authz.Handler, 
-		accessIssuer *authz.AccessTokenIssuer, 
-		spaHandler http.Handler,
-		docsHandler *docs.HttpHandler, 
-		projectsHandler *projects.HttpHandler, 
-		uploadDir string, 
-		usersHandler *users.HttpHandler,
-	) http.Handler {
+	authHandler *authz.Handler,
+	accessIssuer *authz.AccessTokenIssuer,
+	spaHandler http.Handler,
+	docsHandler *docs.HttpHandler,
+	projectsHandler *projects.HttpHandler,
+	uploadDir string,
+	usersHandler *users.HttpHandler,
+) http.Handler {
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
@@ -43,12 +43,13 @@ func NewRouter(
 			// Project Routes
 			r.Post("/projects", projectsHandler.CreateHandler)
 			r.Get("/projects", projectsHandler.ListHandler)
-			
+
 			// Document Routes
 			r.Post("/docs/upload", docsHandler.UploadHandler)
 			r.Get("/docs/dashboard", docsHandler.ListUserDocsHandler)
 			r.Post("/docs/assign-reviewer", docsHandler.AssignReviewerHandler)
-			r.Get("/docs/reviews", docsHandler.ListReviewDocsHandler) 
+			r.Post("/docs/remove-reviewer", docsHandler.RemoveReviewerHandler)
+			r.Get("/docs/reviews", docsHandler.ListReviewDocsHandler)
 			r.Post("/docs/reviews/status", docsHandler.UpdateReviewStatusHandler)
 
 			// User Directory Operations

@@ -14,9 +14,26 @@ export default function AssignedDocumentsView({ documents = [], loading, error, 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {documents.map((doc) => (
           <El as="div" key={doc.id} style="display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:20px;background:linear-gradient(165deg,rgba(255,255,255,.1),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.12)">
-            <div style={{ width: 44, height: 44, borderRadius: 14, display: "grid", placeItems: "center", background: "rgba(255,255,255,.09)" }}>{doc.file_type === "pdf" ? "▤" : "≡"}</div>
+            <a
+              href={`/web/uploads/${doc.file_name}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Open ${doc.title || doc.file_name}`}
+              style={{ textDecoration: "none", color: "inherit", display: "block" }}
+            >
+              <div style={{ width: 44, height: 44, borderRadius: 14, display: "grid", placeItems: "center", background: "rgba(255,255,255,.09)", cursor: "pointer" }}>
+                {doc.file_type === "pdf" ? "▤" : "≡"}
+              </div>
+            </a>
             <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{doc.title || doc.file_name}</div>
+              <a
+                href={`/web/uploads/${doc.file_name}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#eef0ff", textDecoration: "none", fontSize: 15.5, fontWeight: 600 }}
+              >
+                {doc.title || doc.file_name}
+              </a>
               <div style={{ marginTop: 6, fontSize: 12.5, color: "rgba(238,240,255,.58)" }}>{doc.project_name || doc.projectName || "Unassigned"} · submitted by {doc.owner_id}</div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>

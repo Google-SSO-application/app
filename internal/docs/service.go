@@ -75,6 +75,13 @@ func (s *Service) AssignReviewer(ctx context.Context, docID uuid.UUID, reviewerI
 	return s.repo.AssignReviewer(ctx, docID, reviewerID)
 }
 
+func (s *Service) RemoveReviewer(ctx context.Context, docID uuid.UUID) error {
+	if _, err := s.repo.GetByID(ctx, docID); err != nil {
+		return err
+	}
+	return s.repo.RemoveReviewer(ctx, docID)
+}
+
 func (s *Service) ListReviewDocs(ctx context.Context, reviewerID uuid.UUID) ([]types.Document, error) {
 	if reviewerID == uuid.Nil {
 		return nil, errors.New("invalid reviewer id context")

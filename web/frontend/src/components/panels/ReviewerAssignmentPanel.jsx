@@ -10,38 +10,13 @@ export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop
     }
     : null;
 
-  if (assignedReviewer) {
-    return (
-      <div onClick={closePanel} style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(4,5,12,.6)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 20 }}>
-        <div onClick={stop} style={{ width: "min(420px,100%)", padding: 24, borderRadius: 24, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05))", border: "1px solid rgba(255,255,255,.17)", boxShadow: "0 34px 80px rgba(0,0,0,.6)" }}>
-          <div style={{ fontSize: 18, fontWeight: 700 }}>Assigned reviewer</div>
-          <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 12 }}>
-            {assignedReviewer.picture ? (
-              <img src={assignedReviewer.picture} alt={assignedReviewer.name} style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover" }} />
-            ) : (
-              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,.1)", display: "grid", placeItems: "center", fontWeight: 700 }}>
-                {assignedReviewer.name?.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{assignedReviewer.name || "Assigned user"}</div>
-              <div style={{ marginTop: 4, fontSize: 12, color: "rgba(238,240,255,.55)" }}>{assignedReviewer.email}</div>
-            </div>
-          </div>
-          <button type="button" onClick={closePanel} style={{ marginTop: 22, height: 36, padding: "0 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.07)", color: "inherit", cursor: "pointer", fontWeight: 600 }}>
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const { teammates, loading, error, isSubmitting, assignReviewer } = useReviewers(
+  const { teammates, loading, error, isSubmitting, assignReviewer, removeReviewer } = useReviewers(
     documentItem.id,
     onAssignmentSuccess,
     closePanel,
     showToast,
   );
+  const assignableUsers = teammates.filter((user) => String(user.ID) !== String(documentItem.reviewer_id));
 
   return (
     <div 
@@ -53,7 +28,7 @@ export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop
         style={{ width: "min(640px,100%)", maxHeight: "85vh", display: "flex", flexDirection: "column", padding: 24, borderRadius: 24, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05))", border: "1px solid rgba(255,255,255,.17)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.35), 0 34px 80px rgba(0,0,0,.6)" }}
       >
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-.02em" }}>Assign Reviewer Partner</div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-.02em" }}>{assignedReviewer ? "Change assigned reviewer" : "Assign reviewer"}</div>
           <div style={{ marginTop: 4, fontSize: 13, color: "rgba(238,240,255,.62)" }}>
             Select a fellow teammate to review: <span style={{ color: "#fff", fontWeight: 600 }}>{documentItem.title || documentItem.file_name}</span>
           </div>
@@ -65,19 +40,59 @@ export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop
           </div>
         )}
 
-        {/* Scrollable list container area */}
+        {assignedReviewer && (
+          <div style={{ marginTop: 16, padding: 12, borderRadius: 14, background: "rgba(143,240,192,.08)", border: "1px solid rgba(143,240,192,.2)" }}>
+            <div style={{ marginBottom: 10, fontSize: 11, color: "#8ff0c0", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Currently assigned</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {assignedReviewer.picture ? (
+                <img src={assignedReviewer.picture} alt={assignedReviewer.name} style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />
+              ) : (
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,.1)", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 600 }}>
+                  {assignedReviewer.name?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{assignedReviewer.name || "Assigned user"}</div>
+                <div style={{ marginTop: 2, fontSize: 11.5, color: "rgba(238,240,255,.55)" }}>{assignedReviewer.email}</div>
+              </div>
+              
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={removeReviewer}
+                style={{ 
+                  marginLeft: "auto",
+                  height: 28, 
+                  padding: "0 10px", 
+                  borderRadius: 8, 
+                  border: "1px solid rgba(255,106,168,.3)", 
+                  background: "rgba(255,106,168,.12)", 
+                  color: "#ffd4e5", 
+                  fontSize: 11.5, 
+                  fontWeight: 600, 
+                  cursor: isSubmitting ? "wait" : "pointer" 
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        )}
+
+
+        <div style={{ marginTop: 16, fontSize: 12, color: "rgba(238,240,255,.62)", fontWeight: 600 }}>Assignable users</div>
         <div style={{ flex: "1 1 auto", overflowY: "auto", marginTop: 16, display: "flex", flexDirection: "column", gap: 8, paddingRight: 4, minHeight: 180 }}>
           {loading && (
             <div style={{ textAlign: "center", color: "rgba(238,240,255,.45)", fontSize: 13, padding: 20 }}>Scanning team matrix...</div>
           )}
 
-          {!loading && !teammates.length && (
+          {!loading && !assignableUsers.length && (
             <div style={{ textAlign: "center", color: "rgba(238,240,255,.45)", fontSize: 13, padding: 20 }}>
-              No available teammates matching your role parameters found.
+              {assignedReviewer ? "No other users are available for assignment." : "No users are available for assignment."}
             </div>
           )}
 
-          {!loading && teammates.map((user) => (
+          {!loading && assignableUsers.map((user) => (
             <div 
               key={user.ID} 
               style={{ display: "flex", alignItems: "center", justifyItems: "center", gap: 12, padding: 10, borderRadius: 14, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.06)" }}
@@ -99,7 +114,7 @@ export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop
                 onClick={() => assignReviewer(user.ID)}
                 style={{ height: 28, padding: "0 10px", borderRadius: 8, background: "#8ff0c0", color: "#12142a", border: "none", fontSize: 11.5, fontWeight: 600, cursor: isSubmitting ? "wait" : "pointer" }}
               >
-                Assign
+                {assignedReviewer ? "Change" : "Assign"}
               </button>
             </div>
           ))}

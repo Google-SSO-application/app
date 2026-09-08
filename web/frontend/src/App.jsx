@@ -130,7 +130,7 @@ export default function App() {
       {v.uploadOpen && <UploadModal closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} onProjectSelected={v.selectProject} onUploaded={v.refreshUploadedDocs} showToast={showToast} />}
       {v.askOpen    && <AskModal    closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} />}
       {v.projectModalOpen && <ProjectCreateModal closePanel={v.closePanel} stop={v.stop} onCreated={v.refreshUploadedDocs} showToast={showToast} />}
-      {v.reviewerModalOpen && <ReviewerAssignmentPanel documentItem={v.activeReviewerDoc} closePanel={v.closePanel} stop={v.stop} onAssignmentSuccess={v.refreshUploadedDocs} showToast={showToast} />}
+      {v.reviewerModalOpen && <ReviewerAssignmentPanel documentItem={v.activeReviewerDoc} closePanel={v.closePanel} stop={v.stop} onAssignmentSuccess={async () => { await Promise.all([v.refreshUploadedDocs(), v.refreshAssignedDocuments()]); }} showToast={showToast} />}
       {toast && <Toast key={toast.key} message={toast.message} type={toast.type} onClose={closeToast} />}
     </div>
   );
