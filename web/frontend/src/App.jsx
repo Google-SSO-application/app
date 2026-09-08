@@ -8,6 +8,7 @@ import SearchView           from "./components/views/SearchView.jsx";
 import ThreadsView          from "./components/views/ThreadsView.jsx";
 import SourcesView          from "./components/views/SourcesView.jsx";
 import UploadsView          from "./components/views/UploadsView.jsx";
+import AssignedDocumentsView from "./components/views/AssignedDocumentsView.jsx";
 import DocPanel             from "./components/panels/DocPanel.jsx";
 import ThreadPanel          from "./components/panels/ThreadPanel.jsx";
 import UploadModal          from "./components/panels/UploadModal.jsx";
@@ -70,6 +71,7 @@ export default function App() {
               wide={v.wide}
               goSources={v.goSources}
               openProjectModal={v.openProjectModal}
+              goAssigned={v.goAssigned}
             />
 
             <main style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
@@ -83,6 +85,22 @@ export default function App() {
                   resultCount={v.resultCount}
                   project={v.project}
                   results={v.results}
+                />
+              )}
+              {v.isAssigned && (
+                <AssignedDocumentsView
+                  documents={v.assignedDocuments}
+                  loading={v.assignedLoading}
+                  error={v.assignedError}
+                  refresh={v.refreshAssignedDocuments}
+                  updateStatus={async (id, status) => {
+                    try {
+                      await v.updateReviewStatus(id, status);
+                      showToast(status === "published" ? "Document approved." : "Document rejected.");
+                    } catch (error) {
+                      showToast(error.message || "Unable to update review status.", "error");
+                    }
+                  }}
                 />
               )}
               {v.isThreads && (

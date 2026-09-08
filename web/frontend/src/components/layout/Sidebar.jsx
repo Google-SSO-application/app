@@ -3,7 +3,7 @@ import { cssToObj } from "../../lib/style.js";
 
 export default function Sidebar({
   sidebarStyle, sectionStyle, syncCardStyle,
-  nav, projectList, mini, wide, goSources, openProjectModal
+  nav, projectList, mini, wide, goAssigned, openProjectModal
 }) {
   return (
     <El as="aside" style={sidebarStyle}>
@@ -63,18 +63,18 @@ export default function Sidebar({
 
       <div style={cssToObj(syncCardStyle)}>
         {mini && (
-          <button onClick={goSources} title="Drive sync — manage sources"
+          <button onClick={goAssigned} title="Assigned to me"
             style={{ width: 38, height: 38, borderRadius: 12, border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.08)", cursor: "pointer", fontSize: 14, position: "relative", color: "inherit" }}>
-            ◲<span style={{ position: "absolute", top: 5, right: 5, width: 6, height: 6, borderRadius: "50%", background: "#5fe3a1", boxShadow: "0 0 8px #5fe3a1" }} />
+            ✓
           </button>
         )}
         {wide && (
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600 }}>
-              Drive sync <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#5fe3a1", boxShadow: "0 0 10px #5fe3a1" }} />
+              Assigned to me
             </div>
-            <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.5, color: "rgba(238,240,255,.6)" }}>3 folders · last synced 12 min ago</div>
-            <button onClick={goSources} style={{ marginTop: 12, width: "100%", height: 34, borderRadius: 11, border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.09)", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "inherit" }}>Manage sources</button>
+            <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.5, color: "rgba(238,240,255,.6)" }}>Review documents assigned to you.</div>
+            <button onClick={goAssigned} style={{ marginTop: 12, width: "100%", height: 34, borderRadius: 11, border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.09)", cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "inherit" }}>View assigned docs</button>
           </div>
         )}
       </div>

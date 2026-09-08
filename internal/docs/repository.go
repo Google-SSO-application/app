@@ -13,6 +13,8 @@ type Repository interface {
 	GetDocsByOwner(ctx context.Context, ownerID uuid.UUID) ([]types.Document, error)
 	AssignReviewer(ctx context.Context, docID uuid.UUID, reviewerID uuid.UUID) error
 	GetByID(ctx context.Context, docID uuid.UUID) (*types.Document, error)
+	ListReviewDocs(ctx context.Context, reviewerID uuid.UUID) ([]types.Document, error)
+	UpdateReviewStatus(ctx context.Context, docID, reviewerID uuid.UUID, status string) error
 }
 
 type PostgresRepository struct {
@@ -121,4 +123,55 @@ func (r *PostgresRepository) GetByID(ctx context.Context, docID uuid.UUID) (*typ
 		return nil, err
 	}
 	return doc, nil
+}
+
+func (r *PostgresRepository) ListReviewDocs(ctx context.Context, reviewerID uuid.UUID) ([]types.Document, error) {
+	query := `
+		SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name,
+		       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
+		       d.status, d.created_at, d.updated_at
+		FROM documents d
+		LEFT JOIN projects p ON p.id = d.project_id
+		WHERE d.reviewer_id = $1
+		ORDER BY d.created_at DESC;`
+
+	rows, err := r.pool.Query(ctx, query, reviewerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	docs := make([]types.Document, 0)
+	for rows.Next() {
+		var d types.Document
+		err := rows.Scan(
+			&d.ID, &d.ProjectID, &d.ProjectName, &d.OwnerID, &d.ReviewerID,
+			&d.Title, &d.FileType, &d.FileName, &d.Status, &d.CreatedAt, &d.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		docs = append(docs, d)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return docs, nil
+}
+
+func (r *PostgresRepository) UpdateReviewStatus(ctx context.Context, docID, reviewerID uuid.UUID, status string) error {
+	const query = `
+		UPDATE documents
+		SET status = $1, updated_at = NOW()
+		WHERE id = $2 AND reviewer_id = $3`
+	commandTag, err := r.pool.Exec(ctx, query, status, docID, reviewerID)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() == 0 {
+		return ErrDocumentNotFound
+	}
+	return nil
 }

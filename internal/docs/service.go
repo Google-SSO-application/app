@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	ErrDocumentNotFound   = errors.New("document not found")
+	ErrDocumentNotFound     = errors.New("document not found")
 	ErrSelfReviewNotAllowed = errors.New("you cannot assign yourself as a reviewer for your own document")
 )
 
@@ -73,4 +73,18 @@ func (s *Service) AssignReviewer(ctx context.Context, docID uuid.UUID, reviewerI
 	}
 
 	return s.repo.AssignReviewer(ctx, docID, reviewerID)
+}
+
+func (s *Service) ListReviewDocs(ctx context.Context, reviewerID uuid.UUID) ([]types.Document, error) {
+	if reviewerID == uuid.Nil {
+		return nil, errors.New("invalid reviewer id context")
+	}
+	return s.repo.ListReviewDocs(ctx, reviewerID)
+}
+
+func (s *Service) UpdateReviewStatus(ctx context.Context, docID, reviewerID uuid.UUID, status string) error {
+	if status != "published" && status != "rejected" {
+		return errors.New("invalid review status")
+	}
+	return s.repo.UpdateReviewStatus(ctx, docID, reviewerID, status)
 }

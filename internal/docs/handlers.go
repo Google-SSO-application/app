@@ -2,9 +2,9 @@ package docs
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
-	"errors"
 
 	"github.com/google/uuid"
 
@@ -159,4 +159,62 @@ func (h *HttpHandler) AssignReviewerHandler(w http.ResponseWriter, r *http.Reque
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(`{"message":"Reviewer assigned successfully"}`))
+}
+
+func (h *HttpHandler) ListReviewDocsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ac := authz.FromContext(r.Context())
+	if !ac.Authenticated || ac.UserID == uuid.Nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	reviewDocs, err := h.s.ListReviewDocs(r.Context(), ac.UserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(reviewDocs)
+}
+
+func (h *HttpHandler) UpdateReviewStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	ac := authz.FromContext(r.Context())
+	if !ac.Authenticated || ac.UserID == uuid.Nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		DocumentID string `json:"document_id"`
+		Status     string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+	docID, err := uuid.Parse(req.DocumentID)
+	if err != nil {
+		http.Error(w, "Invalid document ID", http.StatusBadRequest)
+		return
+	}
+	if err := h.s.UpdateReviewStatus(r.Context(), docID, ac.UserID, req.Status); err != nil {
+		status := http.StatusInternalServerError
+		if errors.Is(err, ErrDocumentNotFound) || err.Error() == "invalid review status" {
+			status = http.StatusBadRequest
+		}
+		http.Error(w, err.Error(), status)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

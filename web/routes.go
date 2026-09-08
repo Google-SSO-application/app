@@ -48,6 +48,8 @@ func NewRouter(
 			r.Post("/docs/upload", docsHandler.UploadHandler)
 			r.Get("/docs/dashboard", docsHandler.ListUserDocsHandler)
 			r.Post("/docs/assign-reviewer", docsHandler.AssignReviewerHandler)
+			r.Get("/docs/reviews", docsHandler.ListReviewDocsHandler) 
+			r.Post("/docs/reviews/status", docsHandler.UpdateReviewStatusHandler)
 
 			// User Directory Operations
 			r.Get("/users/teammates", usersHandler.ListTeammatesHandler)

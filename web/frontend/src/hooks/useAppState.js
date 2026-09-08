@@ -6,12 +6,14 @@ import { useProjects } from "./useProjects.js";
 import { useResponsiveLayout } from "./useResponsiveLayout.js";
 import { useUploads } from "./useUploads.js";
 import { useUiState } from "./useUiState.js";
+import useAssignedDocuments from "./useAssignedDocuments.js";
 
 export function useAppState() {
   const { state: s, set, openReviewerModal, handlePickProject, closePanel, toggleNav, stop } = useUiState();
   const authState = useAuth();
   const { narrow } = useResponsiveLayout();
   const { uploadedDocs, uploadsLoading, uploadsError, refreshUploadedDocs } = useUploads(authState.signedIn);
+  const assignedState = useAssignedDocuments(authState.signedIn);
   const setTarget = useCallback((target) => set({ target }), [set]);
   const { projects: dynamicProjects, refreshProjects } = useProjects(authState.signedIn, s.target, setTarget);
 
@@ -19,8 +21,9 @@ export function useAppState() {
     if (authState.authReady && authState.signedIn) {
       refreshUploadedDocs();
       refreshProjects();
+      assignedState.refreshAssignedDocuments();
     }
-  }, [authState.authReady, authState.signedIn, refreshUploadedDocs, refreshProjects]);
+  }, [authState.authReady, authState.signedIn, refreshUploadedDocs, refreshProjects, assignedState.refreshAssignedDocuments]);
 
   // ── helpers ──────────────────────────────────────────────────────────────
   const statusOf = (d) =>
@@ -239,6 +242,7 @@ export function useAppState() {
   const openAsk = () => set({ ask: true, target: s.project === "All projects" ? s.target : s.project });
   const goSources = () => set({ view: "sources", navOpen: narrow ? false : true });
   const goUploads = () => set({ view: "uploads", navOpen: narrow ? false : true });
+  const goAssigned = () => set({ view: "assigned", navOpen: narrow ? false : true });
   const toggleOutdated = () => {
     if (!doc) return;
     const st = statusOf(doc);
@@ -271,6 +275,7 @@ export function useAppState() {
     isThreads: s.view === "threads",
     isSources: s.view === "sources",
     isUploads: s.view === "uploads",
+    isAssigned: s.view === "assigned",
     query: s.query,
     onQuery: (e) => set({ query: e.target.value }),
     project: s.project,
@@ -291,6 +296,11 @@ export function useAppState() {
     uploadedDocs,
     uploadsLoading,
     uploadsError,
+    assignedDocuments: assignedState.assignedDocuments,
+    assignedLoading: assignedState.assignedLoading,
+    assignedError: assignedState.assignedError,
+    refreshAssignedDocuments: assignedState.refreshAssignedDocuments,
+    updateReviewStatus: assignedState.updateReviewStatus,
     projectModalOpen: s.projectModal,
     refreshUploadedDocs: refreshAllStates, // Re-binded to sync both arrays
     projectChips,
@@ -303,7 +313,7 @@ export function useAppState() {
     activeReviewerDoc: s.activeReviewerDoc,
     openReviewerModal,
     toggleNav, toggleOutdated, openProjectModal,
-    openUpload, openAsk, goSources, goUploads, closePanel, stop,
+    openUpload, openAsk, goSources, goUploads, goAssigned, closePanel, stop,
     selectProject: handlePickProject,
     ...authState,
     signOut,

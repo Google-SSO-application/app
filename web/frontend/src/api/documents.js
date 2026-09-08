@@ -32,3 +32,16 @@ export async function assignReviewer(documentId, reviewerId) {
     }),
   });
 }
+
+export async function getAssignedDocuments() {
+  return fetch("/web/docs/reviews", { credentials: "include" });
+}
+
+export async function updateReviewStatus(documentId, status) {
+  return fetch("/web/docs/reviews/status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ document_id: documentId, status }),
+  });
+}
