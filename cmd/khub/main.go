@@ -64,6 +64,7 @@ func run(logger *slog.Logger) error {
 	// domain (users)
 	userRepo := users.NewPostgresRepository(pgPool)
 	userService := users.NewService(userRepo)
+	usersHandler := users.NewHttpHandler(userService)
 
 	// domain (authz)
 	googleOAuth := authz.NewGoogleOAuth(cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.AllowedGoogleDomain)
@@ -93,7 +94,7 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 
-	r := web.NewRouter(authHandler, accessIssuer, spaHandler, docHandler, projectHandler, cfg.UploadDir)
+	r := web.NewRouter(authHandler, accessIssuer, spaHandler, docHandler, projectHandler, cfg.UploadDir, usersHandler)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

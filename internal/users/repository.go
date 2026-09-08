@@ -77,3 +77,48 @@ func (r *postgresRepository) Upsert(ctx context.Context, u *types.User) error {
 	u.Role = types.Role(role)
 	return nil
 }
+
+func (r *postgresRepository) ListByRole(ctx context.Context, role types.Role) ([]*types.User, error) {
+	const q = `
+		SELECT id, email, name, picture, role, created_at, updated_at, COALESCE(last_login_at, created_at)
+		FROM users 
+		WHERE role = $1
+		ORDER BY name ASC`
+
+	rows, err := r.pool.Query(ctx, q, string(role))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*types.User
+	for rows.Next() {
+		var u types.User
+		var rString string
+		err := rows.Scan(
+			&u.ID, 
+			&u.Email, 
+			&u.Name, 
+			&u.Picture, 
+			&rString, 
+			&u.CreatedAt, 
+			&u.UpdatedAt, 
+			&u.LastLoginAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		u.Role = types.Role(rString)
+		users = append(users, &u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if users == nil {
+		users = make([]*types.User, 0)
+	}
+
+	return users, nil
+}

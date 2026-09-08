@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS documents (
     title       TEXT NOT NULL,
     file_type   TEXT NOT NULL,
     file_path   TEXT NOT NULL,
+    file_name   TEXT NOT NULL,
     status      TEXT NOT NULL DEFAULT 'pending',
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()

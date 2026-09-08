@@ -35,4 +35,5 @@ type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*User, error)
 	Upsert(ctx context.Context, user *User) error
+	ListByRole(ctx context.Context, role Role) ([]*User, error)
 }

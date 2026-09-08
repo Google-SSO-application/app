@@ -13,6 +13,8 @@ import ThreadPanel          from "./components/panels/ThreadPanel.jsx";
 import UploadModal          from "./components/panels/UploadModal.jsx";
 import AskModal             from "./components/panels/AskModal.jsx";
 import ProjectCreateModal from "./components/panels/ProjectCreateModal.jsx";
+import ReviewerAssignmentPanel from "./components/panels/ReviewerAssignmentPanel.jsx";
+
 
 export default function App() {
   const v = useAppState();
@@ -23,16 +25,16 @@ export default function App() {
       <BackgroundOrbs />
 
       {/* Loading state */}
-      {!v.s.authReady && (
+      {!v.authReady && (
         <div style={{ position: "relative", zIndex: 2, minHeight: "100vh", display: "grid", placeItems: "center", color: "rgba(238,240,255,.72)" }}>
           Checking your Atlas session…
         </div>
       )}
 
       {/* Auth error toast */}
-      {v.s.authError && (
+      {v.authError && (
         <div role="alert" style={{ position: "fixed", zIndex: 60, top: 18, left: "50%", transform: "translateX(-50%)", padding: "12px 16px", borderRadius: 12, background: "rgba(255,106,168,.16)", border: "1px solid rgba(255,106,168,.4)", color: "#ffd4e5", fontSize: 13 }}>
-          {v.s.authError}
+          {v.authError}
         </div>
       )}
 
@@ -93,6 +95,7 @@ export default function App() {
                   error={v.uploadsError}
                   refresh={v.refreshUploadedDocs}
                   openUpload={v.openUpload}
+                  onAssignReviewer={v.openReviewerModal}
                 />
               )}
             </main>
@@ -103,9 +106,10 @@ export default function App() {
       {/* Panels & modals — rendered outside the shell so they overlay everything */}
       {v.docOpen    && <DocPanel    docV={v.docV} closePanel={v.closePanel} toggleOutdated={v.toggleOutdated} outdatedBtnLabel={v.outdatedBtnLabel} outdatedBtnStyle={v.outdatedBtnStyle} />}
       {v.threadOpen && <ThreadPanel threadV={v.threadV} closePanel={v.closePanel} />}
-      {v.uploadOpen && <UploadModal closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} onUploaded={v.refreshUploadedDocs} />}
+      {v.uploadOpen && <UploadModal closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} onProjectSelected={v.selectProject} onUploaded={v.refreshUploadedDocs} />}
       {v.askOpen    && <AskModal    closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} />}
       {v.projectModalOpen && <ProjectCreateModal closePanel={v.closePanel} stop={v.stop} onCreated={v.refreshUploadedDocs} />}
+      {v.reviewerModalOpen && <ReviewerAssignmentPanel documentItem={v.activeReviewerDoc} closePanel={v.closePanel} stop={v.stop} onAssignmentSuccess={v.refreshUploadedDocs} />}
     </div>
   );
 }

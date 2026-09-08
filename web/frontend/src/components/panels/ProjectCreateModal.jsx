@@ -39,7 +39,7 @@ export default function ProjectCreateModal({ closePanel, stop, onCreated }) {
     >
       <div 
         onClick={stop} 
-        style={{ width: "min(420px,100%)", padding: 28, borderRadius: 24, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05))", backdropFilter: "blur(34px) saturate(180%)", WebkitBackdropFilter: "blur(34px) saturate(180%)", border: "1px solid rgba(255,255,255,.17)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.35), 0 34px 80px rgba(0,0,0,.6)" }}
+        style={{ width: "min(620px,100%)", padding: 28, borderRadius: 24, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05))", backdropFilter: "blur(34px) saturate(180%)", WebkitBackdropFilter: "blur(34px) saturate(180%)", border: "1px solid rgba(255,255,255,.17)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.35), 0 34px 80px rgba(0,0,0,.6)" }}
       >
         <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: "-.02em" }}>Create new project workspace</div>
         <div style={{ marginTop: 6, fontSize: 13, color: "rgba(238,240,255,.6)" }}>

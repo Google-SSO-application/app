@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
-	"github.com/codimite-learning/knowledge-hub/internal/users"
 	"github.com/google/uuid"
 )
 
@@ -19,16 +18,21 @@ const (
 	oauthStateCookieName   = "khub_oauth_state"
 )
 
+type UserService interface {
+	GetOrCreateFromGoogle(context.Context, types.GoogleProfile) (*types.User, error)
+	GetByID(context.Context, uuid.UUID) (*types.User, error)
+}
+
 type Handler struct {
 	google  *GoogleOAuth
-	users   *users.Service
+	users   UserService
 	access  *AccessTokenIssuer
 	refresh *RefreshTokenIssuer
 	cfg     types.HandlerConfig
 	log     *slog.Logger
 }
 
-func NewHandler(google *GoogleOAuth, userSvc *users.Service, access *AccessTokenIssuer, refresh *RefreshTokenIssuer, cfg types.HandlerConfig, log *slog.Logger) *Handler {
+func NewHandler(google *GoogleOAuth, userSvc UserService, access *AccessTokenIssuer, refresh *RefreshTokenIssuer, cfg types.HandlerConfig, log *slog.Logger) *Handler {
 	return &Handler{google: google, users: userSvc, access: access, refresh: refresh, cfg: cfg, log: log}
 }
 

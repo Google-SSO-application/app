@@ -14,7 +14,7 @@ function statusStyle(status) {
   return "background:rgba(255,176,88,.14);border:1px solid rgba(255,176,88,.32);color:#ffcf94";
 }
 
-export default function UploadsView({ documents = [], loading, error, refresh, openUpload }) {
+export default function UploadsView({ documents = [], loading, error, refresh, openUpload, onAssignReviewer }) {
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -92,6 +92,36 @@ export default function UploadsView({ documents = [], loading, error, refresh, o
               <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11.5, color: "rgba(238,240,255,.45)", fontFamily: "'DM Mono',monospace" }}>
                 <span>{doc.projectName || "Unassigned"}</span><span>·</span><span>{(doc.fileType || "file").toUpperCase()}</span><span>·</span><span>uploaded {formatDate(doc.createdAt)}</span>
               </div>
+            </div>
+
+            {/* Reviewer Action Area placed in the far right corner */}
+            <div style={{ flex: "0 0 auto", marginLeft: "auto" }}>
+              <button
+                type="button"
+                onClick={() => onAssignReviewer?.(doc)}
+                style={{
+                  height: 32,
+                  padding: "0 12px",
+                  borderRadius: 9,
+                  border: "1px solid rgba(255,255,255,.14)",
+                  background: "rgba(255,255,255,.06)",
+                  color: "rgba(238,240,255,.8)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background 0.2s, color 0.2s"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "rgba(255,255,255,.12)";
+                  e.target.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "rgba(255,255,255,.06)";
+                  e.target.style.color = "rgba(238,240,255,.8)";
+                }}
+              >
+                Assign Reviewer
+              </button>
             </div>
           </El>
         ))}

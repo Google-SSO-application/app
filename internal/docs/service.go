@@ -12,6 +12,11 @@ import (
 	"github.com/google/uuid"
 )
 
+var (
+	ErrDocumentNotFound   = errors.New("document not found")
+	ErrSelfReviewNotAllowed = errors.New("you cannot assign yourself as a reviewer for your own document")
+)
+
 type Service struct {
 	repo    Repository
 	storage FileStorage
@@ -55,4 +60,17 @@ func (u *Service) Upload(ctx context.Context, ownerID uuid.UUID, title string, p
 
 func (u *Service) GetUserDashboard(ctx context.Context, userID uuid.UUID) ([]types.Document, error) {
 	return u.repo.GetDocsByOwner(ctx, userID)
+}
+
+func (s *Service) AssignReviewer(ctx context.Context, docID uuid.UUID, reviewerID uuid.UUID) error {
+	doc, err := s.repo.GetByID(ctx, docID)
+	if err != nil {
+		return err
+	}
+
+	if doc.OwnerID == reviewerID {
+		return ErrSelfReviewNotAllowed
+	}
+
+	return s.repo.AssignReviewer(ctx, docID, reviewerID)
 }

@@ -6,3 +6,4 @@
 export * as auth from "./auth.js";
 export * as documents from "./documents.js";
 export * as project from "./project.js";
+export * as users from "./users.js";

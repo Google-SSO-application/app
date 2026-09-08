@@ -20,3 +20,15 @@ export async function uploadDocument(file, title, project) {
 
   return response;
 }
+
+export async function assignReviewer(documentId, reviewerId) {
+  return fetch("/web/docs/assign-reviewer", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      document_id: documentId,
+      reviewer_id: reviewerId,
+    }),
+  });
+}

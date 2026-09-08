@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"errors"
 
 	"github.com/google/uuid"
 
@@ -12,6 +13,11 @@ import (
 
 type HttpHandler struct {
 	s *Service
+}
+
+type assignReviewerRequest struct {
+	DocumentID string `json:"document_id"`
+	ReviewerID string `json:"reviewer_id"`
 }
 
 func NewHttpHandler(s *Service) *HttpHandler {
@@ -108,4 +114,49 @@ func (h *HttpHandler) ListUserDocsHandler(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(docs)
+}
+
+func (h *HttpHandler) AssignReviewerHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ac := authz.FromContext(r.Context())
+	if !ac.Authenticated || ac.UserID == uuid.Nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req assignReviewerRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload body", http.StatusBadRequest)
+		return
+	}
+
+	docUUID, err := uuid.Parse(req.DocumentID)
+	if err != nil {
+		http.Error(w, "Invalid document identity uuid string format", http.StatusBadRequest)
+		return
+	}
+
+	reviewerUUID, err := uuid.Parse(req.ReviewerID)
+	if err != nil {
+		http.Error(w, "Invalid reviewer identity uuid string format", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.s.AssignReviewer(r.Context(), docUUID, reviewerUUID); err != nil {
+		status := http.StatusInternalServerError
+		if errors.Is(err, ErrDocumentNotFound) {
+			status = http.StatusNotFound
+		} else if errors.Is(err, ErrSelfReviewNotAllowed) {
+			status = http.StatusBadRequest
+		}
+		http.Error(w, err.Error(), status)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`{"message":"Reviewer assigned successfully"}`))
 }

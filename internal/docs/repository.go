@@ -11,6 +11,8 @@ import (
 type Repository interface {
 	CreateDocument(ctx context.Context, doc *types.Document, filePath string) error
 	GetDocsByOwner(ctx context.Context, ownerID uuid.UUID) ([]types.Document, error)
+	AssignReviewer(ctx context.Context, docID uuid.UUID, reviewerID uuid.UUID) error
+	GetByID(ctx context.Context, docID uuid.UUID) (*types.Document, error)
 }
 
 type PostgresRepository struct {
@@ -24,25 +26,24 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 func (r *PostgresRepository) CreateDocument(ctx context.Context, doc *types.Document, filePath string) error {
 	query := `
 		WITH project AS (
-			INSERT INTO projects (name)
-			VALUES ($8)
+			INSERT INTO projects (name, created_by)
+			VALUES ($9, $10)
 			ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
 			RETURNING id
 		)
-		INSERT INTO documents (project_id, owner_id, reviewer_id, title, file_type, file_path, status)
-		VALUES (COALESCE($1, (SELECT id FROM project)), $2, $3, $4, $5, $6, $7)
+		INSERT INTO documents (project_id, owner_id, reviewer_id, title, file_type, file_path, file_name, status)
+		VALUES (COALESCE($1, (SELECT id FROM project)), $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, project_id, created_at, updated_at;`
 
 	return r.pool.QueryRow(ctx, query,
-		doc.ProjectID, doc.OwnerID, doc.ReviewerID, doc.Title, doc.FileType, filePath, doc.Status, doc.ProjectName,
+		doc.ProjectID, doc.OwnerID, doc.ReviewerID, doc.Title, doc.FileType, filePath, doc.FileName, doc.Status, doc.ProjectName, doc.OwnerID,
 	).Scan(&doc.ID, &doc.ProjectID, &doc.CreatedAt, &doc.UpdatedAt)
 }
 
 func (r *PostgresRepository) GetDocsByOwner(ctx context.Context, ownerID uuid.UUID) ([]types.Document, error) {
 	query := `
 		SELECT d.id, d.project_id, COALESCE(p.name, ''),
-		       d.owner_id, d.reviewer_id, d.title, d.file_type,
-		       split_part(d.file_path, '/', cardinality(string_to_array(d.file_path, '/'))) as file_name,
+		       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
 		       d.status, d.created_at, d.updated_at
 		FROM documents d
 		LEFT JOIN projects p ON p.id = d.project_id
@@ -65,4 +66,50 @@ func (r *PostgresRepository) GetDocsByOwner(ctx context.Context, ownerID uuid.UU
 		docs = append(docs, d)
 	}
 	return docs, nil
+}
+
+func (r *PostgresRepository) AssignReviewer(ctx context.Context, docID uuid.UUID, reviewerID uuid.UUID) error {
+	const query = `
+		UPDATE documents
+		SET reviewer_id = $1, updated_at = NOW()
+		WHERE id = $2`
+
+	commandTag, err := r.pool.Exec(ctx, query, reviewerID, docID)
+	if err != nil {
+		return err
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return ErrDocumentNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) GetByID(ctx context.Context, docID uuid.UUID) (*types.Document, error) {
+	const query = `
+		SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name, 
+		       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name, 
+		       d.status, d.created_at, d.updated_at
+		FROM documents d
+		LEFT JOIN projects p ON p.id = d.project_id
+		WHERE d.id = $1`
+
+	doc := &types.Document{}
+	err := r.pool.QueryRow(ctx, query, docID).Scan(
+		&doc.ID,
+		&doc.ProjectID,
+		&doc.ProjectName,
+		&doc.OwnerID,
+		&doc.ReviewerID,
+		&doc.Title,
+		&doc.FileType,
+		&doc.FileName,
+		&doc.Status,
+		&doc.CreatedAt,
+		&doc.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return doc, nil
 }

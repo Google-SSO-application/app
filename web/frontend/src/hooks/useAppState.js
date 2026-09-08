@@ -1,120 +1,26 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { DOCS, THREADS, PILL, NAVBTN } from "../data.js";
 import { badge } from "../lib/badge.js";
-import { auth, documents, project } from "../api/index.js";
+import { useAuth } from "./useAuth.js";
+import { useProjects } from "./useProjects.js";
+import { useResponsiveLayout } from "./useResponsiveLayout.js";
+import { useUploads } from "./useUploads.js";
+import { useUiState } from "./useUiState.js";
 
 export function useAppState() {
-  const [state, setState] = useState({
-    view: "search",
-    query: "",
-    project: "All projects",
-    types: [],
-    status: "Any status",
-    docId: null,
-    threadId: null,
-    upload: false,
-    ask: false,
-    projectModal: false,
-    signedIn: false,
-    authReady: false,
-    authError: "",
-    navOpen: true,
-    collapsed: false,
-    w: 1440,
-    outdated: { 3: true },
-    target: "",
-  });
-  const [uploadedDocs, setUploadedDocs] = useState([]);
-  const [uploadsLoading, setUploadsLoading] = useState(false);
-  const [uploadsError, setUploadsError] = useState("");
-  const [dynamicProjects, setDynamicProjects] = useState([]);
-
-  const set = useCallback((o) => setState((s) => ({ ...s, ...o })), []);
-  const s = state;
-
-  // ── window resize ────────────────────────────────────────────────────────
-  useEffect(() => {
-    const onResize = () =>
-      set({ w: window.innerWidth, navOpen: window.innerWidth > 1000 });
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [set]);
-
-  // ── session check ────────────────────────────────────────────────────────
-  useEffect(() => {
-    let active = true;
-    const loadSession = async () => {
-      try {
-        let response = await auth.getSession();
-        if (response.status === 401) {
-          const refresh = await auth.refreshToken();
-          if (refresh.ok) {
-            response = await auth.getSession();
-          }
-        }
-        if (!active) return;
-        set({ signedIn: response.ok, authReady: true, authError: "" });
-      } catch {
-        if (active)
-          set({ signedIn: false, authReady: true, authError: "Unable to connect to Atlas." });
-      }
-    };
-    loadSession();
-    return () => { active = false; };
-  }, [set]);
-
-  const refreshProjects = useCallback(async () => {
-    if (!state.signedIn) return;
-    try {
-      const response = await project.getProjects();
-      if (response.ok) {
-        const data = await response.json();
-        setDynamicProjects(Array.isArray(data) ? data : []);
-      }
-    } catch (err) {
-      console.error("Could not fetch projects list", err);
-    }
-  }, [state.signedIn]);
-
-  const refreshUploadedDocs = useCallback(async () => {
-    if (!state.signedIn) return;
-    setUploadsLoading(true);
-    setUploadsError("");
-    try {
-      const response = await documents.getDashboard();
-      if (!response.ok) throw new Error("Unable to load your uploads.");
-      const docs = await response.json();
-      setUploadedDocs(Array.isArray(docs) ? docs.map((document) => ({
-        ...document,
-        projectName: document.projectName || document.project_name || "Unassigned",
-        fileType: document.fileType || document.file_type || "",
-        fileName: document.fileName || document.file_name || document.title || "Untitled document",
-        createdAt: document.createdAt || document.created_at || "",
-      })) : []);
-    } catch (error) {
-      setUploadsError(error.message || "Unable to load your uploads.");
-    } finally {
-      setUploadsLoading(false);
-    }
-  }, [state.signedIn]);
+  const { state: s, set, openReviewerModal, handlePickProject, closePanel, toggleNav, stop } = useUiState();
+  const authState = useAuth();
+  const { narrow } = useResponsiveLayout();
+  const { uploadedDocs, uploadsLoading, uploadsError, refreshUploadedDocs } = useUploads(authState.signedIn);
+  const setTarget = useCallback((target) => set({ target }), [set]);
+  const { projects: dynamicProjects, refreshProjects } = useProjects(authState.signedIn, s.target, setTarget);
 
   useEffect(() => {
-    if (state.authReady && state.signedIn) {
+    if (authState.authReady && authState.signedIn) {
       refreshUploadedDocs();
       refreshProjects();
     }
-  }, [state.authReady, state.signedIn, refreshUploadedDocs, refreshProjects]);
-
-  useEffect(() => {
-    if (dynamicProjects.length > 0 && !s.target) {
-      set({ target: dynamicProjects[0].name });
-    }
-  }, [dynamicProjects, s.target, set]);
-
-  const handlePickProject = useCallback((projectName) => {
-    set({ target: projectName });
-  }, [set]);
+  }, [authState.authReady, authState.signedIn, refreshUploadedDocs, refreshProjects]);
 
   // ── helpers ──────────────────────────────────────────────────────────────
   const statusOf = (d) =>
@@ -132,7 +38,6 @@ export function useAppState() {
   };
 
   // ── layout flags ─────────────────────────────────────────────────────────
-  const narrow = s.w < 1000;
   const mini = !narrow && s.collapsed;
   const wide = !mini;
 
@@ -326,7 +231,7 @@ export function useAppState() {
     const fallbackTarget = dynamicProjects.length > 0 ? dynamicProjects[0].name : "";
     set({ 
       upload: true, 
-      target: s.project === "All projects" ? (s.target || fallbackTarget) : s.project 
+      target: s.project === "All projects" ? fallbackTarget : s.project
     });
   };
 
@@ -334,10 +239,6 @@ export function useAppState() {
   const openAsk = () => set({ ask: true, target: s.project === "All projects" ? s.target : s.project });
   const goSources = () => set({ view: "sources", navOpen: narrow ? false : true });
   const goUploads = () => set({ view: "uploads", navOpen: narrow ? false : true });
-  const closePanel = () => set({ docId: null, threadId: null, upload: false, ask: false, projectModal: false });
-  const toggleNav = () => set(narrow ? { navOpen: !s.navOpen } : { collapsed: !s.collapsed });
-  const stop = (e) => e.stopPropagation();
-
   const toggleOutdated = () => {
     if (!doc) return;
     const st = statusOf(doc);
@@ -351,21 +252,15 @@ export function useAppState() {
       ? "border:1px solid rgba(95,227,161,.4);background:rgba(95,227,161,.16);color:#8ff0c0"
       : "border:1px solid rgba(255,176,88,.4);background:rgba(255,176,88,.16);color:#ffcf94");
 
-  // ── auth ─────────────────────────────────────────────────────────────────
-  const signedIn = s.signedIn;
-  const signedOut = s.authReady && !s.signedIn;
-
-  const signIn = () => window.location.assign("/web/auth/google/login");
-
-  const signOut = async () => {
-    await auth.logout();
-    set({ signedIn: false, docId: null, threadId: null, upload: false, ask: false });
-  };
-
   // Triggers synchronization re-fetch tasks concurrently
   const refreshAllStates = async () => {
     await refreshUploadedDocs();
     await refreshProjects();
+  };
+
+  const signOut = async () => {
+    await authState.signOut();
+    set({ docId: null, threadId: null, upload: false, ask: false });
   };
 
   return {
@@ -404,10 +299,14 @@ export function useAppState() {
     threadOpen, threadV,
     uploadOpen, askOpen,
     outdatedBtnLabel, outdatedBtnStyle,
+    reviewerModalOpen: s.reviewerModal,
+    activeReviewerDoc: s.activeReviewerDoc,
+    openReviewerModal,
     toggleNav, toggleOutdated, openProjectModal,
     openUpload, openAsk, goSources, goUploads, closePanel, stop,
-    signedIn, signedOut,
-    signIn, signOut,
+    selectProject: handlePickProject,
+    ...authState,
+    signOut,
   };
 }
 

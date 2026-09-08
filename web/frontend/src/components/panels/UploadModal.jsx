@@ -5,7 +5,7 @@ import { documents, project } from "../../api/index.js";
 const inactiveStyle = "padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:inherit";
 const activeStyle = "padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(95,227,161,.4);background:rgba(95,227,161,.14);color:#8ff0c0";
 
-export default function UploadModal({ closePanel, stop, projectChips, target, onUploaded }) {
+export default function UploadModal({ closePanel, stop, projectChips, target, onUploaded, onProjectSelected }) {
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -14,6 +14,7 @@ export default function UploadModal({ closePanel, stop, projectChips, target, on
   const [localProjects, setLocalProjects] = useState([]);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectDescription, setNewProjectDescription] = useState("");
   const [projectError, setProjectError] = useState("");
 
   const handleFiles = (files) => {
@@ -58,16 +59,13 @@ export default function UploadModal({ closePanel, stop, projectChips, target, on
 
     setProjectError("");
     try {
-      const response = await project.createProject(name);
+      const response = await project.createProject(name, newProjectDescription.trim());
       if (!response.ok) throw new Error((await response.text()) || "Failed to create project.");
       
       const created = await response.json();
       const finalName = created.name || name;
 
-      // Deselect all current active parent options
-      projectChips.forEach((chip) => {
-        if (chip.active) chip.pick();
-      });
+      onProjectSelected?.(finalName);
 
       // Insert new project into local view collection state and mark it as active
       const newChipObject = {
@@ -86,6 +84,7 @@ export default function UploadModal({ closePanel, stop, projectChips, target, on
       });
 
       setNewProjectName("");
+      setNewProjectDescription("");
       setIsCreatingProject(false);
     } catch (error) {
       setProjectError(error.message || "Failed to create project.");
@@ -155,9 +154,10 @@ export default function UploadModal({ closePanel, stop, projectChips, target, on
           <button type="button" onClick={() => setIsCreatingProject((value) => !value)} style={{ fontSize: 12, fontWeight: 600, background: "none", color: "#8ff0c0", cursor: "pointer", padding: "4px 8px", borderRadius: 6, border: "1px solid rgba(95,227,161,.2)" }}>{isCreatingProject ? "Cancel" : "+ Create project"}</button>
         </div>
 
-        {isCreatingProject && <form onSubmit={createProject} style={{ marginTop: 8, display: "flex", gap: 8 }}>
-          <input type="text" placeholder="New project name..." value={newProjectName} onChange={(event) => setNewProjectName(event.target.value)} autoFocus style={{ flex: 1, height: 32, borderRadius: 8, background: "rgba(0,0,0,.2)", border: "1px solid rgba(255,255,255,.1)", color: "#fff", padding: "0 10px", fontSize: 12.5 }} />
-          <button type="submit" style={{ height: 32, padding: "0 12px", borderRadius: 8, background: "#8ff0c0", color: "#12142a", border: "none", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Save</button>
+        {isCreatingProject && <form onSubmit={createProject} style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+          <input type="text" placeholder="New project name..." value={newProjectName} onChange={(event) => setNewProjectName(event.target.value)} autoFocus style={{ width: "100%", height: 32, borderRadius: 8, background: "rgba(0,0,0,.2)", border: "1px solid rgba(255,255,255,.1)", color: "#fff", padding: "0 10px", fontSize: 12.5 }} />
+          <textarea placeholder="Project description..." value={newProjectDescription} onChange={(event) => setNewProjectDescription(event.target.value)} rows={3} style={{ width: "100%", borderRadius: 8, background: "rgba(0,0,0,.2)", border: "1px solid rgba(255,255,255,.1)", color: "#fff", padding: "8px 10px", fontSize: 12.5, resize: "vertical", fontFamily: "inherit" }} />
+          <button type="submit" style={{ alignSelf: "flex-end", height: 32, padding: "0 12px", borderRadius: 8, background: "#8ff0c0", color: "#12142a", border: "none", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Save</button>
         </form>}
         {projectError && <div role="alert" style={{ marginTop: 6, color: "#ff6aa8", fontSize: 11.5 }}>{projectError}</div>}
 

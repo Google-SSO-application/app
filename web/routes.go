@@ -10,9 +10,18 @@ import (
 	"github.com/codimite-learning/knowledge-hub/internal/authz"
 	"github.com/codimite-learning/knowledge-hub/internal/docs"
 	"github.com/codimite-learning/knowledge-hub/internal/projects"
+	"github.com/codimite-learning/knowledge-hub/internal/users"
 )
 
-func NewRouter(authHandler *authz.Handler, accessIssuer *authz.AccessTokenIssuer, spaHandler http.Handler, docsHandler *docs.HttpHandler, projectsHandler *projects.HttpHandler, uploadDir string) http.Handler {
+func NewRouter(
+		authHandler *authz.Handler, 
+		accessIssuer *authz.AccessTokenIssuer, 
+		spaHandler http.Handler,
+		docsHandler *docs.HttpHandler, 
+		projectsHandler *projects.HttpHandler, 
+		uploadDir string, 
+		usersHandler *users.HttpHandler,
+	) http.Handler {
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
@@ -38,6 +47,10 @@ func NewRouter(authHandler *authz.Handler, accessIssuer *authz.AccessTokenIssuer
 			// Document Routes
 			r.Post("/docs/upload", docsHandler.UploadHandler)
 			r.Get("/docs/dashboard", docsHandler.ListUserDocsHandler)
+			r.Post("/docs/assign-reviewer", docsHandler.AssignReviewerHandler)
+
+			// User Directory Operations
+			r.Get("/users/teammates", usersHandler.ListTeammatesHandler)
 		})
 
 		fileServer := http.FileServer(http.Dir(uploadDir))
