@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { project } from "../../api/index.js";
 
-export default function ProjectCreateModal({ closePanel, stop, onCreated }) {
+export default function ProjectCreateModal({ closePanel, stop, onCreated, showToast }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -24,8 +24,10 @@ export default function ProjectCreateModal({ closePanel, stop, onCreated }) {
       
       // Successfully registered to PostgreSQL backend database layer context!
       await onCreated?.(); 
+      showToast?.("Project created successfully.");
       closePanel();
     } catch (err) {
+      showToast?.(err.message || "Unable to create project.", "error");
       setError(err.message || "An unexpected error occurred while communicating with database.");
     } finally {
       setIsSaving(false);

@@ -1,11 +1,46 @@
 import React from "react";
 import useReviewers from "../../hooks/useReviewers.js";
 
-export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop, onAssignmentSuccess }) {
+export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop, onAssignmentSuccess, showToast }) {
+  const assignedReviewer = documentItem.reviewer_id
+    ? {
+      name: documentItem.reviewer_name,
+      email: documentItem.reviewer_email,
+      picture: documentItem.reviewer_picture,
+    }
+    : null;
+
+  if (assignedReviewer) {
+    return (
+      <div onClick={closePanel} style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(4,5,12,.6)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 20 }}>
+        <div onClick={stop} style={{ width: "min(420px,100%)", padding: 24, borderRadius: 24, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05))", border: "1px solid rgba(255,255,255,.17)", boxShadow: "0 34px 80px rgba(0,0,0,.6)" }}>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Assigned reviewer</div>
+          <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 12 }}>
+            {assignedReviewer.picture ? (
+              <img src={assignedReviewer.picture} alt={assignedReviewer.name} style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,.1)", display: "grid", placeItems: "center", fontWeight: 700 }}>
+                {assignedReviewer.name?.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{assignedReviewer.name || "Assigned user"}</div>
+              <div style={{ marginTop: 4, fontSize: 12, color: "rgba(238,240,255,.55)" }}>{assignedReviewer.email}</div>
+            </div>
+          </div>
+          <button type="button" onClick={closePanel} style={{ marginTop: 22, height: 36, padding: "0 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.07)", color: "inherit", cursor: "pointer", fontWeight: 600 }}>
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const { teammates, loading, error, isSubmitting, assignReviewer } = useReviewers(
     documentItem.id,
     onAssignmentSuccess,
     closePanel,
+    showToast,
   );
 
   return (

@@ -120,7 +120,7 @@ export default function UploadsView({ documents = [], loading, error, refresh, o
                   e.target.style.color = "rgba(238,240,255,.8)";
                 }}
               >
-                Assign Reviewer
+                {doc.reviewer_id ? "View assigned user" : "Assign Reviewer"}
               </button>
             </div>
           </El>

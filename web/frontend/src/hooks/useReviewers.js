@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { documents, users } from "../api/index.js";
 
-export default function useReviewers(documentId, onAssignmentSuccess, closePanel) {
+export default function useReviewers(documentId, onAssignmentSuccess, closePanel, showToast) {
   const [teammates, setTeammates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,8 +37,10 @@ export default function useReviewers(documentId, onAssignmentSuccess, closePanel
         throw new Error(errorText || "Failed to establish assignment mapping.");
       }
       await onAssignmentSuccess?.();
+      showToast?.("Reviewer assigned successfully.");
       closePanel();
     } catch (err) {
+      showToast?.(err.message || "Unable to assign reviewer.", "error");
       setError(err.message || "Something went wrong saving reviewer context.");
     } finally {
       setIsSubmitting(false);

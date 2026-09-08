@@ -14,10 +14,13 @@ import UploadModal          from "./components/panels/UploadModal.jsx";
 import AskModal             from "./components/panels/AskModal.jsx";
 import ProjectCreateModal from "./components/panels/ProjectCreateModal.jsx";
 import ReviewerAssignmentPanel from "./components/panels/ReviewerAssignmentPanel.jsx";
+import Toast from "./components/common/Toast.jsx";
+import { useToast } from "./hooks/useToast.js";
 
 
 export default function App() {
   const v = useAppState();
+  const { toast, showToast, closeToast } = useToast();
 
   return (
     <div style={{ position: "relative", minHeight: "100vh", fontFamily: "'DM Sans',system-ui,sans-serif", color: "#eef0ff", background: "#05060c", overflowX: "hidden" }}>
@@ -106,10 +109,11 @@ export default function App() {
       {/* Panels & modals — rendered outside the shell so they overlay everything */}
       {v.docOpen    && <DocPanel    docV={v.docV} closePanel={v.closePanel} toggleOutdated={v.toggleOutdated} outdatedBtnLabel={v.outdatedBtnLabel} outdatedBtnStyle={v.outdatedBtnStyle} />}
       {v.threadOpen && <ThreadPanel threadV={v.threadV} closePanel={v.closePanel} />}
-      {v.uploadOpen && <UploadModal closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} onProjectSelected={v.selectProject} onUploaded={v.refreshUploadedDocs} />}
+      {v.uploadOpen && <UploadModal closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} onProjectSelected={v.selectProject} onUploaded={v.refreshUploadedDocs} showToast={showToast} />}
       {v.askOpen    && <AskModal    closePanel={v.closePanel} stop={v.stop} projectChips={v.projectChips} target={v.target} />}
-      {v.projectModalOpen && <ProjectCreateModal closePanel={v.closePanel} stop={v.stop} onCreated={v.refreshUploadedDocs} />}
-      {v.reviewerModalOpen && <ReviewerAssignmentPanel documentItem={v.activeReviewerDoc} closePanel={v.closePanel} stop={v.stop} onAssignmentSuccess={v.refreshUploadedDocs} />}
+      {v.projectModalOpen && <ProjectCreateModal closePanel={v.closePanel} stop={v.stop} onCreated={v.refreshUploadedDocs} showToast={showToast} />}
+      {v.reviewerModalOpen && <ReviewerAssignmentPanel documentItem={v.activeReviewerDoc} closePanel={v.closePanel} stop={v.stop} onAssignmentSuccess={v.refreshUploadedDocs} showToast={showToast} />}
+      {toast && <Toast key={toast.key} message={toast.message} type={toast.type} onClose={closeToast} />}
     </div>
   );
 }

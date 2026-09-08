@@ -43,10 +43,13 @@ func (r *PostgresRepository) CreateDocument(ctx context.Context, doc *types.Docu
 func (r *PostgresRepository) GetDocsByOwner(ctx context.Context, ownerID uuid.UUID) ([]types.Document, error) {
 	query := `
 		SELECT d.id, d.project_id, COALESCE(p.name, ''),
-		       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
+		       d.owner_id, d.reviewer_id,
+		       COALESCE(u.name, ''), COALESCE(u.email, ''), COALESCE(u.picture, ''),
+		       d.title, d.file_type, d.file_name,
 		       d.status, d.created_at, d.updated_at
 		FROM documents d
 		LEFT JOIN projects p ON p.id = d.project_id
+		LEFT JOIN users u ON u.id = d.reviewer_id
 		WHERE d.owner_id = $1
 		ORDER BY d.created_at DESC;`
 
@@ -59,7 +62,7 @@ func (r *PostgresRepository) GetDocsByOwner(ctx context.Context, ownerID uuid.UU
 	docs := make([]types.Document, 0)
 	for rows.Next() {
 		var d types.Document
-		err := rows.Scan(&d.ID, &d.ProjectID, &d.ProjectName, &d.OwnerID, &d.ReviewerID, &d.Title, &d.FileType, &d.FileName, &d.Status, &d.CreatedAt, &d.UpdatedAt)
+		err := rows.Scan(&d.ID, &d.ProjectID, &d.ProjectName, &d.OwnerID, &d.ReviewerID, &d.ReviewerName, &d.ReviewerEmail, &d.ReviewerPicture, &d.Title, &d.FileType, &d.FileName, &d.Status, &d.CreatedAt, &d.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -87,11 +90,14 @@ func (r *PostgresRepository) AssignReviewer(ctx context.Context, docID uuid.UUID
 
 func (r *PostgresRepository) GetByID(ctx context.Context, docID uuid.UUID) (*types.Document, error) {
 	const query = `
-		SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name, 
-		       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name, 
+		SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name,
+		       d.owner_id, d.reviewer_id,
+		       COALESCE(u.name, ''), COALESCE(u.email, ''), COALESCE(u.picture, ''),
+		       d.title, d.file_type, d.file_name,
 		       d.status, d.created_at, d.updated_at
 		FROM documents d
 		LEFT JOIN projects p ON p.id = d.project_id
+		LEFT JOIN users u ON u.id = d.reviewer_id
 		WHERE d.id = $1`
 
 	doc := &types.Document{}
@@ -101,6 +107,9 @@ func (r *PostgresRepository) GetByID(ctx context.Context, docID uuid.UUID) (*typ
 		&doc.ProjectName,
 		&doc.OwnerID,
 		&doc.ReviewerID,
+		&doc.ReviewerName,
+		&doc.ReviewerEmail,
+		&doc.ReviewerPicture,
 		&doc.Title,
 		&doc.FileType,
 		&doc.FileName,

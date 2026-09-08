@@ -5,7 +5,7 @@ import { documents, project } from "../../api/index.js";
 const inactiveStyle = "padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:inherit";
 const activeStyle = "padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(95,227,161,.4);background:rgba(95,227,161,.14);color:#8ff0c0";
 
-export default function UploadModal({ closePanel, stop, projectChips, target, onUploaded, onProjectSelected }) {
+export default function UploadModal({ closePanel, stop, projectChips, target, onUploaded, onProjectSelected, showToast }) {
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -86,7 +86,9 @@ export default function UploadModal({ closePanel, stop, projectChips, target, on
       setNewProjectName("");
       setNewProjectDescription("");
       setIsCreatingProject(false);
+      showToast?.("Project created successfully.");
     } catch (error) {
+      showToast?.(error.message || "Unable to create project.", "error");
       setProjectError(error.message || "Failed to create project.");
     }
   };
@@ -108,8 +110,10 @@ export default function UploadModal({ closePanel, stop, projectChips, target, on
         
         // Pass up active local project state context to update parent layout registers
         await onUploaded?.();
+        showToast?.("Document uploaded successfully.");
         closePanel();
       } catch (error) {
+        showToast?.(error.message || "Unable to upload document.", "error");
         alert(`Upload error: ${error.message}`);
       } finally {
         setIsUploading(false);
