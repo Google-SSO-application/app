@@ -129,6 +129,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, docID uuid.UUID) (*typ
 		       d.owner_id, d.reviewer_id,
 		       COALESCE(u.name, ''), COALESCE(u.email, ''), COALESCE(u.picture, ''),
 		       d.title, d.file_type, d.file_name,
+		       d.file_path,
 		       d.status, d.created_at, d.updated_at
 		FROM documents d
 		LEFT JOIN projects p ON p.id = d.project_id
@@ -148,6 +149,7 @@ func (r *PostgresRepository) GetByID(ctx context.Context, docID uuid.UUID) (*typ
 		&doc.Title,
 		&doc.FileType,
 		&doc.FileName,
+		&doc.FilePath,
 		&doc.Status,
 		&doc.CreatedAt,
 		&doc.UpdatedAt,

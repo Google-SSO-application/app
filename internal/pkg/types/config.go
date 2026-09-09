@@ -63,7 +63,7 @@ func LoadConfig() (*Config, error) {
 		AccessTokenTTL:   getEnvDuration("ACCESS_TOKEN_TTL", 15*time.Minute),
 		RefreshTokenTTL:  getEnvDuration("REFRESH_TOKEN_TTL", 7*24*time.Hour),
 
-		UploadDir: getEnv("UPLOAD_DIR", "./.data/uploads"),
+		UploadDir: getEnv("UPLOAD_DIR", "/data/uploads"),
 
 		GeminiAPIKey: os.Getenv("GEMINI_API_KEY"),
 	}
