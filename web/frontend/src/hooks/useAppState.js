@@ -8,6 +8,7 @@ import { useUploads } from "./useUploads.js";
 import useUploadDocs from "./useTags.js";
 import { useUiState } from "./useUiState.js";
 import useAssignedDocuments from "./useAssignedDocuments.js";
+import { usePublishedDocs } from "./usePublishedDocs.js";
 
 export function useAppState() {
   const { state: s, set, openReviewerModal, handlePickProject, closePanel, toggleNav, stop } = useUiState();
@@ -19,6 +20,7 @@ export function useAppState() {
   const { projects: dynamicProjects, refreshProjects } = useProjects(authState.signedIn, s.target, setTarget);
   const uploadTagState = useUploadDocs(authState, refreshUploadedDocs, refreshProjects);
   const [globalTagOpen, setGlobalTagOpen] = useState(false);
+  const { publishedDocs, projectCounts, publishedLoading, refreshPublishedData } = usePublishedDocs(s.project, authState.signedIn);
 
   useEffect(() => {
     if (authState.authReady && authState.signedIn) {
@@ -38,11 +40,10 @@ export function useAppState() {
 
   const matches = (d) => {
     const q = s.query.trim().toLowerCase();
-    if (s.project !== "All projects" && d.project !== s.project) return false;
-    if (s.types.length && !s.types.includes(d.type)) return false;
+    if (s.types.length && !s.types.includes(d.fileType)) return false;
     if (s.status !== "Any status" && statusOf(d) !== s.status.toLowerCase()) return false;
     if (!q) return true;
-    return (d.title + " " + d.excerpt + " " + d.tags.join(" ") + " " + d.type + " " + d.project)
+    return (d.title + " " + (d.fileName || "") + " " + (d.projectName || ""))
       .toLowerCase()
       .includes(q);
   };
@@ -73,13 +74,15 @@ export function useAppState() {
     : "margin-top:14px;padding:16px;border-radius:22px;background:linear-gradient(165deg, rgba(56,208,214,.16), rgba(255,255,255,.04));backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)";
 
   // ── search results ───────────────────────────────────────────────────────
-  const results = DOCS.filter(matches).map((d) => {
+  const filteredDocs = publishedDocs.filter(matches);
+
+  const results = filteredDocs.map((d) => {
     const b = badge(statusOf(d));
     return {
       ...d,
       badge: b.label,
       badgeStyle: b.style,
-      meta: d.updated,
+      meta: new Date(d.createdAt).toLocaleDateString(),
       cardStyle:
         "display:flex;gap:14px;padding:16px 18px;border-radius:20px;cursor:pointer;" +
         "background:linear-gradient(165deg, rgba(255,255,255,.10), rgba(255,255,255,.04));" +
@@ -92,7 +95,7 @@ export function useAppState() {
   });
 
   // ── doc / thread detail ──────────────────────────────────────────────────
-  const doc = DOCS.find((d) => d.id === s.docId);
+  const doc = publishedDocs.find((d) => d.id === s.docId) || uploadedDocs.find((d) => d.id === s.docId);
   const docVals = doc
     ? (() => {
       const st = statusOf(doc);
@@ -141,10 +144,7 @@ export function useAppState() {
   ];
 
   const projectList = allProjectsCombined.map((p) => {
-    const count = p.name === "All projects"
-      ? uploadedDocs.length
-      : uploadedDocs.filter((d) => d.projectName === p.name || d.project === p.name).length;
-
+    const count = projectCounts[p.name] || 0; 
     const isCurrentSelection = s.project === p.name;
     const dotColor = getProjectColor(p.name);
 
@@ -272,8 +272,7 @@ export function useAppState() {
 
   // Triggers synchronization re-fetch tasks concurrently
   const refreshAllStates = async () => {
-    await refreshUploadedDocs();
-    await refreshProjects();
+    await Promise.all([refreshUploadedDocs(), refreshPublishedData(), refreshProjects()]);
   };
 
   const signOut = async () => {
@@ -318,7 +317,8 @@ export function useAppState() {
     updateReviewStatus: assignedState.updateReviewStatus,
     projectModalOpen: s.projectModal,
     refreshUploadedDocs,
-    refreshUploadedDocs: refreshAllStates, // Re-binded to sync both arrays
+    resultCount: filteredDocs.length,
+    refreshUploadedDocs: refreshAllStates,
     projectChips,
     ...uploadTagState,
     target: s.target,

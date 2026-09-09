@@ -87,3 +87,17 @@ export async function getUploadsCount() {
   });
   return response;
 }
+
+export async function getPublishedDocuments(projectName) {
+  return fetch(`/web/docs/published?project=${encodeURIComponent(projectName)}`, {
+    method: "GET",
+    credentials: "include",
+  });
+}
+
+export async function getProjectPublishedCounts() {
+  return fetch("/web/docs/counts/projects", {
+    method: "GET",
+    credentials: "include",
+  });
+}

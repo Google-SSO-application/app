@@ -52,6 +52,9 @@ func NewRouter(
 			r.Get("/docs/reviews", docsHandler.ListReviewDocsHandler)
 			r.Post("/docs/reviews/status", docsHandler.HandleReview)
 
+			r.Get("/docs/published", docsHandler.ListPublishedDocsHandler)
+			r.Get("/docs/counts/projects", docsHandler.GetPublishedCountsHandler)
+
 			r.Get("/docs/search", docsHandler.HandleSearch)
 
 			r.Get("/tags", docsHandler.ListTagsHandler) 

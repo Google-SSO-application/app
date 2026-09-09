@@ -25,6 +25,8 @@ type Repository interface {
 	GetUploadsCount(ctx context.Context, ownerID uuid.UUID) (int, error)
 	PublishDocumentWithVector(ctx context.Context, docID, reviewerID uuid.UUID, status string, content string, vectorValues []float32) error
 	FindByVectorSimilarity(ctx context.Context, vectorValues []float32, limit int) ([]types.Document, []float64, error)
+	GetPublishedCountsByProject(ctx context.Context) (map[string]int, error)
+	GetPublishedByProject(ctx context.Context, projectName string) ([]types.Document, error)
 }
 
 type PostgresRepository struct {
@@ -393,4 +395,77 @@ func (r *PostgresRepository) FindByVectorSimilarity(ctx context.Context, vectorV
 	}
 
 	return documents, distances, nil
+}
+
+func (r *PostgresRepository) GetPublishedCountsByProject(ctx context.Context) (map[string]int, error) {
+	query := `
+		SELECT COALESCE(p.name, 'All projects') as project_name, COUNT(d.id)::int as count
+		FROM documents d
+		LEFT JOIN projects p ON p.id = d.project_id
+		WHERE d.status = 'published'
+		GROUP BY p.name;`
+
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	counts := make(map[string]int)
+	for rows.Next() {
+		var name string
+		var count int
+		if err := rows.Scan(&name, &count); err != nil {
+			return nil, err
+		}
+		counts[name] = count
+	}
+	return counts, nil
+}
+
+func (r *PostgresRepository) GetPublishedByProject(ctx context.Context, projectName string) ([]types.Document, error) {
+	var query string
+	var args []interface{}
+
+	if projectName == "All projects" {
+		query = `
+			SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name,
+			       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
+			       d.status, d.created_at, d.updated_at
+			FROM documents d
+			LEFT JOIN projects p ON p.id = d.project_id
+			WHERE d.status = 'published'
+			ORDER BY d.created_at DESC;`
+	} else {
+		query = `
+			SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name,
+			       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
+			       d.status, d.created_at, d.updated_at
+			FROM documents d
+			JOIN projects p ON p.id = d.project_id
+			WHERE d.status = 'published' AND p.name = $1
+			ORDER BY d.created_at DESC;`
+		args = append(args, projectName)
+	}
+
+	rows, err := r.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var docs []types.Document
+	for rows.Next() {
+		var doc types.Document
+		err := rows.Scan(
+			&doc.ID, &doc.ProjectID, &doc.ProjectName, &doc.OwnerID, &doc.ReviewerID,
+			&doc.Title, &doc.FileType, &doc.FileName, &doc.FilePath, &doc.Status, 
+			&doc.CreatedAt, &doc.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		docs = append(docs, doc)
+	}
+	return docs, nil
 }

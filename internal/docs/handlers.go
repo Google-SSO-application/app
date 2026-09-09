@@ -40,6 +40,11 @@ type createTagRequest struct {
 	Tags       []string `json:"tags"`
 }
 
+type ProjectCount struct {
+	ProjectName string `json:"project_name"`
+	Count       int    `json:"count"`
+}
+
 func NewHttpHandler(s *Service) *HttpHandler {
 	return &HttpHandler{s: s}
 }
@@ -418,4 +423,40 @@ func (h *HttpHandler) GetCountHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(countResponse{Count: count})
+}
+
+func (h *HttpHandler) GetPublishedCountsHandler(w http.ResponseWriter, r *http.Request) {
+	countsMap, err := h.s.GetProjectPublishedCounts(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Unpack map layout records smoothly into our DTO slice array structure
+	results := make([]ProjectCount, 0, len(countsMap))
+	for name, count := range countsMap {
+		results = append(results, ProjectCount{
+			ProjectName: name,
+			Count:       count,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+func (h *HttpHandler) ListPublishedDocsHandler(w http.ResponseWriter, r *http.Request) {
+	projectName := r.URL.Query().Get("project")
+	if projectName == "" {
+		projectName = "All projects"
+	}
+
+	docsList, err := h.s.GetPublishedDocuments(r.Context(), projectName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(docsList)
 }

@@ -176,3 +176,14 @@ func (s *Service) GetUserUploadsCount(ctx context.Context, ownerID uuid.UUID) (i
 	}
 	return s.repo.GetUploadsCount(ctx, ownerID)
 }
+
+func (s *Service) GetProjectPublishedCounts(ctx context.Context) (map[string]int, error) {
+	return s.repo.GetPublishedCountsByProject(ctx)
+}
+
+func (s *Service) GetPublishedDocuments(ctx context.Context, projectName string) ([]types.Document, error) {
+	if projectName == "" {
+		projectName = "All projects"
+	}
+	return s.repo.GetPublishedByProject(ctx, projectName)
+}
