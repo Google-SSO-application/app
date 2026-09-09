@@ -1,42 +1,50 @@
-import El from "../../lib/El.jsx";
+const CHIP_BASE = "h-8 rounded-xl px-3.5 text-xs font-semibold";
+const CHIP_ACTIVE = `${CHIP_BASE} border border-white/30 bg-white/[0.22]`;
+const CHIP_INACTIVE = `${CHIP_BASE} border border-white/[0.12] bg-white/[0.06] text-white/[0.72]`;
 
 export default function AskModal({ closePanel, stop, projectChips, target }) {
   return (
-    <div onClick={closePanel} style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(4,5,12,.6)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 20, overflowY: "auto" }}>
-      <div onClick={stop} style={{ width: "min(560px,100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", padding: "clamp(20px,3vw,30px)", borderRadius: 28, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05))", backdropFilter: "blur(34px) saturate(180%)", WebkitBackdropFilter: "blur(34px) saturate(180%)", border: "1px solid rgba(255,255,255,.17)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.35), 0 34px 80px rgba(0,0,0,.6)" }}>
+    <div onClick={closePanel} className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[#04050c]/60 p-5 backdrop-blur-[8px]">
+      <div onClick={stop} className="w-[min(560px,100%)] max-h-[calc(100vh-40px)] overflow-y-auto rounded-[28px] border border-white/[0.17] bg-gradient-to-br from-white/[0.14] to-white/5 p-[clamp(20px,3vw,30px)] shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_34px_80px_rgba(0,0,0,.6)] backdrop-blur-[34px] backdrop-saturate-[1.8]">
 
-        <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-.02em" }}>Ask the team</div>
-        <div style={{ marginTop: 6, fontSize: 13.5, color: "rgba(238,240,255,.62)" }}>
+        <div className="text-xl font-bold tracking-[-.02em]">Ask the team</div>
+        <div className="mt-1.5 text-[13.5px] text-white/[0.62]">
           Once an answer is accepted, the thread becomes searchable alongside the docs.
         </div>
 
-        <El as="input" placeholder="Question — e.g. Why do payouts stall at 'pending_capture'?"
-          style="margin-top:18px;width:100%;height:46px;padding:0 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);outline:none;font-size:14px;color:#eef0ff"
-          focusStyle="border-color:rgba(169,180,255,.55);background:rgba(255,255,255,.11)" />
+        <input
+          placeholder="Question — e.g. Why do payouts stall at 'pending_capture'?"
+          className="mt-[18px] h-[46px] w-full rounded-2xl border border-white/[0.14] bg-white/[0.07] px-4 text-sm text-[#eef0ff] outline-none transition-colors focus:border-[#a9b4ff]/[0.55] focus:bg-white/[0.11]"
+        />
 
-        <El as="textarea" placeholder="Add context: what you tried, error messages, which environment…" rows={5}
-          style="margin-top:10px;width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);outline:none;font-size:13.5px;line-height:1.6;resize:vertical;font-family:'DM Sans',system-ui,sans-serif;color:#eef0ff"
-          focusStyle="border-color:rgba(169,180,255,.55);background:rgba(255,255,255,.11)" />
+        <textarea
+          placeholder="Add context: what you tried, error messages, which environment…"
+          rows={5}
+          className="mt-2.5 w-full resize-y rounded-2xl border border-white/[0.14] bg-white/[0.07] px-4 py-3.5 font-sans text-[13.5px] leading-[1.6] text-[#eef0ff] outline-none transition-colors focus:border-[#a9b4ff]/[0.55] focus:bg-white/[0.11]"
+        />
 
-        <div style={{ marginTop: 16, fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(238,240,255,.42)" }}>Project</div>
-        <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="mt-4 text-[11px] uppercase tracking-[.12em] text-white/[0.42]">Project</div>
+        <div className="mt-2 flex flex-wrap gap-2">
           {projectChips.map((c) => (
-            <El as="button" key={c.name} onClick={c.pick} style={c.style}>{c.name}</El>
+            <button key={c.name} onClick={c.pick} className={c.active ? CHIP_ACTIVE : CHIP_INACTIVE}>
+              {c.name}
+            </button>
           ))}
         </div>
 
-        <El as="input" placeholder="Tags — payouts, retry, settlement"
-          style="margin-top:14px;width:100%;height:42px;padding:0 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);outline:none;font-size:13.5px;color:#eef0ff"
-          focusStyle="border-color:rgba(169,180,255,.55)" />
+        <input
+          placeholder="Tags — payouts, retry, settlement"
+          className="mt-3.5 h-[42px] w-full rounded-2xl border border-white/[0.14] bg-white/[0.07] px-4 text-[13.5px] text-[#eef0ff] outline-none transition-colors focus:border-[#a9b4ff]/[0.55]"
+        />
 
-        <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 9, fontSize: 12.5, color: "rgba(238,240,255,.6)" }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#5fe3a1", boxShadow: "0 0 8px #5fe3a1" }} />
+        <div className="mt-2.5 flex items-center gap-2.5 text-[12.5px] text-white/60">
+          <span className="h-2 w-2 rounded-full bg-[#5fe3a1] shadow-[0_0_8px_#5fe3a1]" />
           3 docs in {target} look related — they'll be suggested to responders.
         </div>
 
-        <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={closePanel} style={{ height: 42, padding: "0 18px", borderRadius: 14, border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.07)", cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "inherit" }}>Cancel</button>
-          <button onClick={closePanel} style={{ height: 42, padding: "0 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,.22)", background: "linear-gradient(160deg, rgba(255,255,255,.92), rgba(255,255,255,.72))", color: "#12142a", fontWeight: 600, fontSize: 13.5, cursor: "pointer" }}>Post to {target}</button>
+        <div className="mt-5 flex justify-end gap-2.5">
+          <button onClick={closePanel} className="h-[42px] rounded-2xl border border-white/[0.16] bg-white/[0.07] px-[18px] text-[13.5px] font-semibold text-inherit">Cancel</button>
+          <button onClick={closePanel} className="h-[42px] rounded-2xl border border-white/[0.22] bg-gradient-to-br from-white/90 to-white/70 px-5 text-[13.5px] font-semibold text-[#12142a]">Post to {target}</button>
         </div>
       </div>
     </div>

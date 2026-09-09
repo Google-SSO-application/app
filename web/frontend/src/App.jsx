@@ -25,20 +25,23 @@ export default function App() {
   const { toast, showToast, closeToast } = useToast();
 
   return (
-    <div style={{ position: "relative", minHeight: "100vh", fontFamily: "'DM Sans',system-ui,sans-serif", color: "#eef0ff", background: "#05060c", overflowX: "hidden" }}>
+    <div className="relative min-h-screen overflow-x-hidden bg-[#05060c] font-sans text-[#eef0ff]">
 
       <BackgroundOrbs />
 
       {/* Loading state */}
       {!v.authReady && (
-        <div style={{ position: "relative", zIndex: 2, minHeight: "100vh", display: "grid", placeItems: "center", color: "rgba(238,240,255,.72)" }}>
+        <div className="relative z-[2] grid min-h-screen place-items-center text-white/[0.72]">
           Checking your Atlas session…
         </div>
       )}
 
       {/* Auth error toast */}
       {v.authError && (
-        <div role="alert" style={{ position: "fixed", zIndex: 60, top: 18, left: "50%", transform: "translateX(-50%)", padding: "12px 16px", borderRadius: 12, background: "rgba(255,106,168,.16)", border: "1px solid rgba(255,106,168,.4)", color: "#ffd4e5", fontSize: 13 }}>
+        <div
+          role="alert"
+          className="fixed left-1/2 top-[18px] z-[60] -translate-x-1/2 rounded-xl border border-[#ff6aa8]/40 bg-[#ff6aa8]/[0.16] px-4 py-3 text-[13px] text-[#ffd4e5]"
+        >
           {v.authError}
         </div>
       )}
@@ -50,7 +53,7 @@ export default function App() {
 
       {/* Main app shell */}
       {v.signedIn && (
-        <div style={{ position: "relative", zIndex: 2, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <div className="relative z-[2] flex min-h-screen flex-col">
 
           <AppHeader
             query={v.query}
@@ -61,22 +64,21 @@ export default function App() {
             signOut={v.signOut}
           />
 
-          <div style={{ flex: "1 1 auto", display: "flex", alignItems: "flex-start", gap: "clamp(12px,2vw,22px)", padding: "clamp(14px,2.4vw,24px)", maxWidth: 1560, width: "100%", margin: "0 auto" }}>
+          <div className="mx-auto flex w-full max-w-[1560px] flex-1 items-start gap-[clamp(12px,2vw,22px)] p-[clamp(14px,2.4vw,24px)]">
 
             <Sidebar
-              sidebarStyle={v.sidebarStyle}
-              sectionStyle={v.sectionStyle}
-              syncCardStyle={v.syncCardStyle}
-              nav={v.nav}
-              projectList={v.projectList}
+              narrow={v.narrow}
+              navOpen={v.navOpen}
               mini={v.mini}
               wide={v.wide}
+              nav={v.nav}
+              projectList={v.projectList}
               goSources={v.goSources}
               openProjectModal={v.openProjectModal}
               goAssigned={v.goAssigned}
             />
 
-            <main style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
+            <main className="flex min-w-0 flex-1 flex-col gap-4">
               {v.isSearch && (
                 <SearchView
                   heroTitle={v.heroTitle}
@@ -127,7 +129,7 @@ export default function App() {
       )}
 
       {/* Panels & modals — rendered outside the shell so they overlay everything */}
-      {v.docOpen    && <DocPanel    docV={v.docV} closePanel={v.closePanel} toggleOutdated={v.toggleOutdated} outdatedBtnLabel={v.outdatedBtnLabel} outdatedBtnStyle={v.outdatedBtnStyle} />}
+      {v.docOpen    && <DocPanel    docV={v.docV} closePanel={v.closePanel} toggleOutdated={v.toggleOutdated} />}
       {v.threadOpen && <ThreadPanel threadV={v.threadV} closePanel={v.closePanel} />}
       {v.uploadOpen && (
         <UploadModal 

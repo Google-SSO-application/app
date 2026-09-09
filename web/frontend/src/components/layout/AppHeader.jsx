@@ -1,33 +1,54 @@
-import El from "../../lib/El.jsx";
-
 export default function AppHeader({ query, onQuery, toggleNav, openUpload, openGlobalTag, signOut }) {
   return (
-    <header style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", alignItems: "center", gap: 16, padding: "12px clamp(14px,3vw,28px)", background: "linear-gradient(180deg, rgba(12,14,28,.75), rgba(12,14,28,.45))", backdropFilter: "blur(24px) saturate(170%)", WebkitBackdropFilter: "blur(24px) saturate(170%)", borderBottom: "1px solid rgba(255,255,255,.09)" }}>
-      <button onClick={toggleNav} style={{ flex: "0 0 auto", width: 38, height: 38, borderRadius: 12, border: "1px solid rgba(255,255,255,.14)", background: "rgba(255,255,255,.07)", cursor: "pointer", fontSize: 15, color: "inherit" }}>☰</button>
+    <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-white/[0.09] bg-gradient-to-b from-[#0c0e1c]/75 to-[#0c0e1c]/45 px-[clamp(14px,3vw,28px)] py-3 backdrop-blur-2xl backdrop-saturate-[1.7]">
+      <button
+        onClick={toggleNav}
+        className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-xl border border-white/[0.14] bg-white/[0.07] text-[15px] text-inherit"
+      >
+        ☰
+      </button>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" }}>
-        <div style={{ width: 30, height: 30, borderRadius: 10, display: "grid", placeItems: "center", background: "linear-gradient(160deg, rgba(255,255,255,.4), rgba(255,255,255,.08))", border: "1px solid rgba(255,255,255,.22)", fontSize: 14 }}>◈</div>
-        <div style={{ fontWeight: 700, letterSpacing: "-.02em", fontSize: 15, whiteSpace: "nowrap" }}>Atlas</div>
+      <div className="flex flex-none items-center gap-2.5">
+        <div className="grid h-[30px] w-[30px] place-items-center rounded-[10px] border border-white/[0.22] bg-gradient-to-br from-white/40 to-white/[0.08] text-sm">
+          ◈
+        </div>
+        <div className="whitespace-nowrap text-[15px] font-bold tracking-[-.02em]">Atlas</div>
       </div>
 
-      <div style={{ flex: "1 1 auto", maxWidth: 640, position: "relative", display: "flex", alignItems: "center" }}>
-        <span style={{ position: "absolute", left: 16, opacity: .5, fontSize: 14 }}>⌕</span>
-        <El as="input" value={query} onChange={onQuery} placeholder="Search docs, READMEs, threads…"
-          style="width:100%;height:42px;padding:0 84px 0 40px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);backdrop-filter:blur(18px);outline:none;font-size:14px;color:#eef0ff"
-          focusStyle="border-color:rgba(169,180,255,.55);background:rgba(255,255,255,.11)" />
-        <span style={{ position: "absolute", right: 14, fontFamily: "'DM Mono',monospace", fontSize: 11, padding: "4px 8px", borderRadius: 8, border: "1px solid rgba(255,255,255,.14)", color: "rgba(238,240,255,.5)" }}>⌘K</span>
+      <div className="relative flex max-w-[640px] flex-1 items-center">
+        <span className="absolute left-4 text-sm opacity-50">⌕</span>
+        <input
+          value={query}
+          onChange={onQuery}
+          placeholder="Search docs, READMEs, threads…"
+          className="h-[42px] w-full rounded-2xl border border-white/[0.14] bg-white/[0.07] py-0 pl-10 pr-[84px] text-sm text-[#eef0ff] outline-none backdrop-blur-lg transition-colors focus:border-[#a9b4ff]/[0.55] focus:bg-white/[0.11]"
+        />
+        <span className="absolute right-3.5 rounded-lg border border-white/[0.14] px-2 py-1 font-mono text-[11px] text-white/50">
+          ⌘K
+        </span>
       </div>
 
-      <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
-        <El as="button" onClick={openGlobalTag} title="Create global tag"
-          style="height:38px;padding:0 14px;border-radius:12px;border:1px solid rgba(95,227,161,.28);background:rgba(95,227,161,.1);cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;color:#8ff0c0"
-          hoverStyle="background:rgba(95,227,161,.18)">＋ Tag</El>
-        <El as="button" onClick={openUpload}
-          style="height:38px;padding:0 16px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.07));cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;color:inherit"
-          hoverStyle="background:rgba(255,255,255,.18)">＋ Upload</El>
-        <El as="button" onClick={signOut} title="Sign out"
-          style="width:34px;height:34px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:linear-gradient(150deg,#8b7bff,#38d0d6);display:grid;place-items:center;font-size:12px;font-weight:700;color:#0b0c18;cursor:pointer"
-          hoverStyle="filter:brightness(1.1)">NR</El>
+      <div className="ml-auto flex flex-none items-center gap-2.5">
+        <button
+          onClick={openGlobalTag}
+          title="Create global tag"
+          className="h-[38px] whitespace-nowrap rounded-xl border border-[#5fe3a1]/[0.28] bg-[#5fe3a1]/10 px-3.5 text-[13px] font-semibold text-[#8ff0c0] transition-colors hover:bg-[#5fe3a1]/[0.18]"
+        >
+          ＋ Tag
+        </button>
+        <button
+          onClick={openUpload}
+          className="h-[38px] whitespace-nowrap rounded-xl border border-white/20 bg-gradient-to-br from-white/20 to-white/[0.07] px-4 text-[13px] font-semibold text-inherit transition-colors hover:bg-white/[0.18]"
+        >
+          ＋ Upload
+        </button>
+        <button
+          onClick={signOut}
+          title="Sign out"
+          className="grid h-[34px] w-[34px] place-items-center rounded-full border border-white/20 bg-gradient-to-br from-[#8b7bff] to-[#38d0d6] text-xs font-bold text-[#0b0c18] transition-[filter] hover:brightness-110"
+        >
+          NR
+        </button>
       </div>
     </header>
   );

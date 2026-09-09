@@ -1,15 +1,30 @@
+const BASE =
+  "inline-flex items-center h-[22px] px-[9px] rounded-lg text-[11px] font-semibold tracking-[.02em] border";
+
 export const BADGE_MAP = {
-  current:  ["#5fe3a1", "rgba(95,227,161,.14)",  "Current"],
-  outdated: ["#ffb058", "rgba(255,176,88,.16)",   "Outdated"],
-  review:   ["#a9b4ff", "rgba(169,180,255,.16)",  "In review"],
-  answered: ["#5fe3a1", "rgba(95,227,161,.14)",   "Answered"],
-  open:     ["#ffb058", "rgba(255,176,88,.16)",   "Open"],
+  current: {
+    label: "Current",
+    className: `${BASE} text-[#5fe3a1] bg-[#5fe3a1]/[0.14] border-[#5fe3a1]/20`,
+  },
+  outdated: {
+    label: "Outdated",
+    className: `${BASE} text-[#ffb058] bg-[#ffb058]/[0.16] border-[#ffb058]/20`,
+  },
+  review: {
+    label: "In review",
+    className: `${BASE} text-[#a9b4ff] bg-[#a9b4ff]/[0.16] border-[#a9b4ff]/20`,
+  },
+  answered: {
+    label: "Answered",
+    className: `${BASE} text-[#5fe3a1] bg-[#5fe3a1]/[0.14] border-[#5fe3a1]/20`,
+  },
+  open: {
+    label: "Open",
+    className: `${BASE} text-[#ffb058] bg-[#ffb058]/[0.16] border-[#ffb058]/20`,
+  },
 };
 
 export function badge(status) {
-  const [fg, bg, label] = BADGE_MAP[status] || BADGE_MAP.current;
-  return {
-    style: `display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:.02em;color:${fg};background:${bg};border:1px solid ${fg}33`,
-    label,
-  };
+  const entry = BADGE_MAP[status] || BADGE_MAP.current;
+  return { className: entry.className, label: entry.label };
 }

@@ -21,9 +21,9 @@ export default function ProjectCreateModal({ closePanel, stop, onCreated, showTo
         const text = await response.text();
         throw new Error(text || "Failed to create the requested project workspace registry.");
       }
-      
+
       // Successfully registered to PostgreSQL backend database layer context!
-      await onCreated?.(); 
+      await onCreated?.();
       showToast?.("Project created successfully.");
       closePanel();
     } catch (err) {
@@ -35,43 +35,43 @@ export default function ProjectCreateModal({ closePanel, stop, onCreated, showTo
   };
 
   return (
-    <div 
-      onClick={closePanel} 
-      style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(4,5,12,.6)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 20 }}
+    <div
+      onClick={closePanel}
+      className="fixed inset-0 z-[100] grid place-items-center bg-[#04050c]/60 p-5 backdrop-blur-[8px]"
     >
-      <div 
-        onClick={stop} 
-        style={{ width: "min(620px,100%)", padding: 28, borderRadius: 24, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05))", backdropFilter: "blur(34px) saturate(180%)", WebkitBackdropFilter: "blur(34px) saturate(180%)", border: "1px solid rgba(255,255,255,.17)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.35), 0 34px 80px rgba(0,0,0,.6)" }}
+      <div
+        onClick={stop}
+        className="w-[min(620px,100%)] rounded-3xl border border-white/[0.17] bg-gradient-to-br from-white/[0.14] to-white/5 p-7 shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_34px_80px_rgba(0,0,0,.6)] backdrop-blur-[34px] backdrop-saturate-[1.8]"
       >
-        <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: "-.02em" }}>Create new project workspace</div>
-        <div style={{ marginTop: 6, fontSize: 13, color: "rgba(238,240,255,.6)" }}>
+        <div className="text-[19px] font-bold tracking-[-.02em]">Create new project workspace</div>
+        <div className="mt-1.5 text-[13px] text-white/60">
           Spin up a fresh repository index target group area.
         </div>
 
         {error && (
-          <div role="alert" style={{ marginTop: 14, padding: 12, borderRadius: 12, background: "rgba(255,106,168,.12)", border: "1px solid rgba(255,106,168,.3)", color: "#ff6aa8", fontSize: 12.5 }}>
+          <div role="alert" className="mt-3.5 rounded-xl border border-[#ff6aa8]/30 bg-[#ff6aa8]/[0.12] p-3 text-[12.5px] text-[#ff6aa8]">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={handleSubmit} className="mt-[18px] flex flex-col gap-3.5">
           <div>
-            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "rgba(238,240,255,.7)", marginBottom: 6 }}>
+            <label className="mb-1.5 block text-[12.5px] font-semibold text-white/70">
               Project Label Title Name
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="e.g. Infrastructure, Security V3..."
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isSaving}
               autoFocus
-              style={{ width: "100%", height: 40, padding: "0 12px", borderRadius: 11, border: "1px solid rgba(255,255,255,.14)", background: "rgba(255,255,255,.07)", outline: "none", fontSize: 13.5, color: "#eef0ff" }}
+              className="h-10 w-full rounded-[11px] border border-white/[0.14] bg-white/[0.07] px-3 text-[13.5px] text-[#eef0ff] outline-none"
             />
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "rgba(238,240,255,.7)", marginBottom: 6 }}>
+            <label className="mb-1.5 block text-[12.5px] font-semibold text-white/70">
               Description
             </label>
             <textarea
@@ -80,23 +80,23 @@ export default function ProjectCreateModal({ closePanel, stop, onCreated, showTo
               onChange={(e) => setDescription(e.target.value)}
               disabled={isSaving}
               rows={4}
-              style={{ width: "100%", padding: "10px 12px", borderRadius: 11, border: "1px solid rgba(255,255,255,.14)", background: "rgba(255,255,255,.07)", outline: "none", resize: "vertical", fontSize: 13.5, color: "#eef0ff", fontFamily: "inherit" }}
+              className="w-full resize-y rounded-[11px] border border-white/[0.14] bg-white/[0.07] px-3 py-2.5 font-sans text-[13.5px] text-[#eef0ff] outline-none"
             />
           </div>
 
-          <div style={{ marginTop: 8, display: "flex", gap: 10, justifyContent: "flex-end" }}>
-            <button 
-              type="button" 
-              onClick={closePanel} 
+          <div className="mt-2 flex justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={closePanel}
               disabled={isSaving}
-              style={{ height: 38, padding: "0 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.07)", cursor: "pointer", fontSize: 13, color: "inherit", fontWeight: 600 }}
+              className="h-[38px] rounded-xl border border-white/[0.16] bg-white/[0.07] px-4 text-[13px] font-semibold text-inherit"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isSaving || !name.trim()}
-              style={{ height: 38, padding: "0 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,.22)", background: "linear-gradient(160deg, rgba(255,255,255,.92), rgba(255,255,255,.72))", color: "#12142a", fontWeight: 600, fontSize: 13, cursor: isSaving ? "wait" : "pointer" }}
+              className="h-[38px] rounded-xl border border-white/[0.22] bg-gradient-to-br from-white/[0.92] to-white/[0.72] px-[18px] text-[13px] font-semibold text-[#12142a] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSaving ? "Creating..." : "Save space"}
             </button>

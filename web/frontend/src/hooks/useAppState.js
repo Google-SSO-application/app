@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
-import { DOCS, THREADS, PILL, NAVBTN } from "../data.js";
+import { DOCS, THREADS } from "../data.js";
 import { badge } from "../lib/badge.js";
 import { useAuth } from "./useAuth.js";
 import { useProjects } from "./useProjects.js";
@@ -52,27 +52,6 @@ export function useAppState() {
   const mini = !narrow && s.collapsed;
   const wide = !mini;
 
-  const hide = mini ? "display:none" : "flex:1 1 auto;text-align:left";
-  const hideCount = mini
-    ? "display:none"
-    : "font-family:'DM Mono',monospace;font-size:11px;opacity:.5";
-
-  // ── sidebar style ────────────────────────────────────────────────────────
-  const sidebarStyle =
-    narrow && !s.navOpen
-      ? "display:none"
-      : narrow
-        ? "position:fixed;left:12px;right:12px;top:70px;z-index:30;max-height:76vh;overflow-y:auto"
-        : `flex:0 0 ${mini ? 68 : 262}px;position:sticky;top:88px;transition:flex-basis .22s ease`;
-
-  const sectionStyle = mini
-    ? "display:none"
-    : "margin:16px 4px 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(238,240,255,.42)";
-
-  const syncCardStyle = mini
-    ? "margin-top:14px;padding:12px 0;border-radius:20px;background:linear-gradient(165deg, rgba(56,208,214,.16), rgba(255,255,255,.04));backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.12);display:flex;justify-content:center"
-    : "margin-top:14px;padding:16px;border-radius:22px;background:linear-gradient(165deg, rgba(56,208,214,.16), rgba(255,255,255,.04));backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)";
-
   // ── search results ───────────────────────────────────────────────────────
   const filteredDocs = publishedDocs.filter(matches);
 
@@ -81,15 +60,8 @@ export function useAppState() {
     return {
       ...d,
       badge: b.label,
-      badgeStyle: b.style,
+      badgeClassName: b.className,
       meta: new Date(d.createdAt).toLocaleDateString(),
-      cardStyle:
-        "display:flex;gap:14px;padding:16px 18px;border-radius:20px;cursor:pointer;" +
-        "background:linear-gradient(165deg, rgba(255,255,255,.10), rgba(255,255,255,.04));" +
-        "backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);" +
-        "border:1px solid rgba(255,255,255,.12);" +
-        "box-shadow:inset 0 1px 0 rgba(255,255,255,.24), 0 16px 40px rgba(0,0,0,.3);" +
-        "transition:transform .18s ease, background .18s ease",
       open: () => set({ docId: d.id }),
     };
   });
@@ -100,7 +72,7 @@ export function useAppState() {
     ? (() => {
       const st = statusOf(doc);
       const b = badge(st);
-      return { ...doc, badge: b.label, badgeStyle: b.style, isOutdated: st === "outdated" };
+      return { ...doc, badge: b.label, badgeClassName: b.className, isOutdated: st === "outdated" };
     })()
     : null;
 
@@ -108,7 +80,7 @@ export function useAppState() {
   const thVals = th
     ? (() => {
       const b = badge(th.status);
-      return { ...th, badge: b.label, badgeStyle: b.style };
+      return { ...th, badge: b.label, badgeClassName: b.className };
     })()
     : null;
 
@@ -122,14 +94,8 @@ export function useAppState() {
 
   const nav = navItems.map(([id, icon, label, count]) => ({
     id, icon, label, count,
-    labelStyle: hide,
-    countStyle: hideCount,
     title: label,
-    style:
-      NAVBTN +
-      (s.view === id
-        ? "background:linear-gradient(160deg, rgba(255,255,255,.22), rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)"
-        : "background:transparent;border:1px solid transparent;color:rgba(238,240,255,.72)"),
+    active: s.view === id,
     go: () => {
       if (id === "uploads") {
         refreshUploadedDocs();
@@ -144,22 +110,16 @@ export function useAppState() {
   ];
 
   const projectList = allProjectsCombined.map((p) => {
-    const count = projectCounts[p.name] || 0; 
+    const count = projectCounts[p.name] || 0;
     const isCurrentSelection = s.project === p.name;
     const dotColor = getProjectColor(p.name);
 
     return {
       name: p.name,
-      count: count,
-      labelStyle: hide,   
-      countStyle: hideCount,
+      count,
       title: p.name,
-      dot: `width:8px;height:8px;border-radius:50%;background:${dotColor};box-shadow:0 0 8px ${dotColor}88`,
-      style:
-        NAVBTN +
-        (isCurrentSelection
-          ? "background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.16)"
-          : "background:transparent;border:1px solid transparent;color:rgba(238,240,255,.7)"),
+      active: isCurrentSelection,
+      dotColor,
       pick: () => set({ project: p.name, view: "search", navOpen: narrow ? false : true }),
     };
   });
@@ -167,11 +127,7 @@ export function useAppState() {
   // ── filters ──────────────────────────────────────────────────────────────
   const typeFilters = ["PDF", "README", "Google Doc", "Medium", "Dev.to"].map((t) => ({
     label: t,
-    style:
-      PILL +
-      (s.types.includes(t)
-        ? "background:linear-gradient(160deg, rgba(255,255,255,.26), rgba(255,255,255,.1));border:1px solid rgba(255,255,255,.28);color:#fff"
-        : "background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(238,240,255,.75)"),
+    active: s.types.includes(t),
     toggle: () =>
       set({
         types: s.types.includes(t)
@@ -182,18 +138,14 @@ export function useAppState() {
 
   const statusFilters = ["Any status", "Current", "Outdated", "Review"].map((f) => ({
     label: f,
-    style:
-      PILL +
-      (s.status === f
-        ? "background:rgba(169,180,255,.22);border:1px solid rgba(169,180,255,.4);color:#dfe3ff"
-        : "background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(238,240,255,.62)"),
+    active: s.status === f,
     pick: () => set({ status: f }),
   }));
 
   // ── threads list ─────────────────────────────────────────────────────────
   const threads = THREADS.map((t) => {
     const b = badge(t.status);
-    return { ...t, badge: b.label, badgeStyle: b.style, open: () => set({ threadId: t.id }) };
+    return { ...t, badge: b.label, badgeClassName: b.className, open: () => set({ threadId: t.id }) };
   });
 
   // ── sources list ─────────────────────────────────────────────────────────
@@ -205,7 +157,6 @@ export function useAppState() {
     { icon: "◇", name: "Accepted answers", detail: "68 threads indexed", action: "View rules" },
   ].map((x) => ({
     ...x,
-    dotStyle: "width:8px;height:8px;border-radius:50%;background:#5fe3a1;box-shadow:0 0 10px #5fe3a1",
     act: () => set({ view: "sources" }),
   }));
 
@@ -213,11 +164,6 @@ export function useAppState() {
   const projectChips = dynamicProjects.map((p) => ({
     name: p.name,
     active: s.target === p.name,
-    style:
-      PILL +
-      (s.target === p.name
-        ? "background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.3)"
-        : "background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(238,240,255,.72)"),
     pick: () => handlePickProject(p.name),
   }));
 
@@ -244,8 +190,8 @@ export function useAppState() {
 
   const openUpload = () => {
     const fallbackTarget = dynamicProjects.length > 0 ? dynamicProjects[0].name : "";
-    set({ 
-      upload: true, 
+    set({
+      upload: true,
       target: s.project === "All projects" ? fallbackTarget : s.project
     });
   };
@@ -263,13 +209,6 @@ export function useAppState() {
     set({ outdated: { ...s.outdated, [doc.id]: st !== "outdated" } });
   };
 
-  const outdatedBtnLabel = docVals?.isOutdated ? "Restore as current" : "Mark as outdated";
-  const outdatedBtnStyle =
-    "height:38px;padding:0 15px;border-radius:12px;cursor:pointer;font-size:13px;font-weight:600;" +
-    (docVals?.isOutdated
-      ? "border:1px solid rgba(95,227,161,.4);background:rgba(95,227,161,.16);color:#8ff0c0"
-      : "border:1px solid rgba(255,176,88,.4);background:rgba(255,176,88,.16);color:#ffcf94");
-
   // Triggers synchronization re-fetch tasks concurrently
   const refreshAllStates = async () => {
     await Promise.all([refreshUploadedDocs(), refreshPublishedData(), refreshProjects()]);
@@ -283,7 +222,7 @@ export function useAppState() {
   return {
     s,
     narrow, mini, wide,
-    sidebarStyle, sectionStyle, syncCardStyle,
+    navOpen: s.navOpen,
     isSearch: s.view === "search",
     isThreads: s.view === "threads",
     isSources: s.view === "sources",
@@ -316,7 +255,6 @@ export function useAppState() {
     refreshAssignedDocuments: assignedState.refreshAssignedDocuments,
     updateReviewStatus: assignedState.updateReviewStatus,
     projectModalOpen: s.projectModal,
-    refreshUploadedDocs,
     resultCount: filteredDocs.length,
     refreshUploadedDocs: refreshAllStates,
     projectChips,
@@ -325,7 +263,6 @@ export function useAppState() {
     docOpen, docV,
     threadOpen, threadV,
     uploadOpen, askOpen, globalTagOpen, setGlobalTagOpen,
-    outdatedBtnLabel, outdatedBtnStyle,
     reviewerModalOpen: s.reviewerModal,
     activeReviewerDoc: s.activeReviewerDoc,
     openReviewerModal,
@@ -344,7 +281,7 @@ function getProjectColor(name) {
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   const hue = Math.abs(hash) % 360;
   return `hsl(${hue}, 65%, 70%)`;
 }

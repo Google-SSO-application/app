@@ -1,5 +1,15 @@
-import El from "../../lib/El.jsx";
-import { cssToObj } from "../../lib/style.js";
+const SUGGESTION_CLASS =
+  "h-8 rounded-[11px] border border-white/[0.14] bg-white/[0.07] px-3.5 text-[12.5px] text-white/[0.85] transition-colors hover:bg-white/[0.15]";
+
+const TYPE_PILL_ACTIVE =
+  "h-8 rounded-xl px-3.5 text-xs font-semibold border border-white/[0.28] bg-gradient-to-br from-white/[0.26] to-white/10 text-white";
+const TYPE_PILL_INACTIVE =
+  "h-8 rounded-xl px-3.5 text-xs font-semibold border border-white/[0.12] bg-white/[0.06] text-white/75";
+
+const STATUS_PILL_ACTIVE =
+  "h-8 rounded-xl px-3.5 text-xs font-semibold border border-[#a9b4ff]/40 bg-[#a9b4ff]/[0.22] text-[#dfe3ff]";
+const STATUS_PILL_INACTIVE =
+  "h-8 rounded-xl px-3.5 text-xs font-semibold border border-white/10 bg-white/5 text-white/[0.62]";
 
 export default function SearchView({
   heroTitle, heroSub, suggestions,
@@ -10,62 +20,75 @@ export default function SearchView({
   return (
     <>
       {/* Hero / search prompt card */}
-      <div style={{ padding: "clamp(18px,2.6vw,30px)", borderRadius: 26, background: "linear-gradient(160deg, rgba(255,255,255,.13), rgba(255,255,255,.045))", backdropFilter: "blur(30px) saturate(180%)", WebkitBackdropFilter: "blur(30px) saturate(180%)", border: "1px solid rgba(255,255,255,.14)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.3), 0 24px 60px rgba(0,0,0,.42)", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: 0, left: 0, width: "40%", height: "100%", background: "linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.10), rgba(255,255,255,0))", animation: "sheen 7s ease-in-out infinite", pointerEvents: "none" }} />
-        <div style={{ fontSize: "clamp(22px,3vw,32px)", fontWeight: 700, letterSpacing: "-.03em" }}>{heroTitle}</div>
-        <div style={{ marginTop: 8, fontSize: 14, color: "rgba(238,240,255,.62)" }}>{heroSub}</div>
-        <div style={{ marginTop: 18, display: "flex", flexWrap: "wrap", gap: 8 }}>
+      <div className="relative overflow-hidden rounded-[26px] border border-white/[0.14] bg-gradient-to-br from-white/[0.13] to-white/[0.045] p-[clamp(18px,2.6vw,30px)] shadow-[inset_0_1px_0_rgba(255,255,255,.3),0_24px_60px_rgba(0,0,0,.42)] backdrop-blur-[30px] backdrop-saturate-[1.8]">
+        <div className="pointer-events-none absolute left-0 top-0 h-full w-2/5 animate-sheen bg-gradient-to-r from-white/0 via-white/10 to-white/0" />
+        <div className="text-[clamp(22px,3vw,32px)] font-bold tracking-[-.03em]">{heroTitle}</div>
+        <div className="mt-2 text-sm text-white/[0.62]">{heroSub}</div>
+        <div className="mt-[18px] flex flex-wrap gap-2">
           {suggestions.map((sg, i) => (
-            <El as="button" key={i} onClick={sg.go}
-              style="height:32px;padding:0 14px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);cursor:pointer;font-size:12.5px;color:rgba(238,240,255,.85)"
-              hoverStyle="background:rgba(255,255,255,.15)">{sg.label}</El>
+            <button key={i} onClick={sg.go} className={SUGGESTION_CLASS}>
+              {sg.label}
+            </button>
           ))}
         </div>
       </div>
 
       {/* Filters */}
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+      <div className="flex flex-wrap items-center gap-2">
         {typeFilters.map((t) => (
-          <El as="button" key={t.label} onClick={t.toggle} style={t.style}>{t.label}</El>
+          <button key={t.label} onClick={t.toggle} className={t.active ? TYPE_PILL_ACTIVE : TYPE_PILL_INACTIVE}>
+            {t.label}
+          </button>
         ))}
-        <div style={{ flex: "1 1 auto" }} />
+        <div className="flex-1" />
         {statusFilters.map((f) => (
-          <El as="button" key={f.label} onClick={f.pick} style={f.style}>{f.label}</El>
+          <button key={f.label} onClick={f.pick} className={f.active ? STATUS_PILL_ACTIVE : STATUS_PILL_INACTIVE}>
+            {f.label}
+          </button>
         ))}
       </div>
 
       {/* Result count */}
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "0 4px" }}>
-        <div style={{ fontSize: 13, color: "rgba(238,240,255,.6)" }}>
-          {resultCount} results in <strong style={{ color: "#eef0ff" }}>{project}</strong>
+      <div className="flex items-baseline gap-2.5 px-1">
+        <div className="text-[13px] text-white/60">
+          {resultCount} results in <strong className="text-[#eef0ff]">{project}</strong>
         </div>
       </div>
 
       {/* Result cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="flex flex-col gap-2.5">
         {results.map((r) => (
-          <El as="div" key={r.id} onClick={r.open} style={r.cardStyle}
-            hoverStyle="background:rgba(255,255,255,.13);transform:translateY(-2px)">
-            <div style={{ flex: "0 0 auto", width: 44, height: 44, borderRadius: 14, display: "grid", placeItems: "center", fontSize: 16, background: "rgba(255,255,255,.09)", border: "1px solid rgba(255,255,255,.14)" }}>{r.icon}</div>
-            <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
-                <div style={{ fontSize: 15.5, fontWeight: 600, letterSpacing: "-.01em" }}>{r.title}</div>
-                <span style={cssToObj(r.badgeStyle)}>{r.badge}</span>
+          <div
+            key={r.id}
+            onClick={r.open}
+            className="flex cursor-pointer gap-3.5 rounded-[20px] border border-white/[0.12] bg-gradient-to-br from-white/10 to-white/[0.04] px-[18px] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,.24),0_16px_40px_rgba(0,0,0,.3)] backdrop-blur-2xl backdrop-saturate-[1.7] transition-[transform,background] duration-[180ms] ease-in-out hover:-translate-y-0.5 hover:bg-white/[0.13]"
+          >
+            <div className="grid h-11 w-11 flex-none place-items-center rounded-2xl border border-white/[0.14] bg-white/[0.09] text-base">
+              {r.icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-[9px]">
+                <div className="text-[15.5px] font-semibold tracking-[-.01em]">{r.title}</div>
+                <span className={r.badgeClassName}>{r.badge}</span>
               </div>
-              <div style={{ marginTop: 5, fontSize: 13.5, lineHeight: 1.55, color: "rgba(238,240,255,.62)", textWrap: "pretty", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{r.excerpt}</div>
+              <div className="mt-[5px] line-clamp-2 text-[13.5px] leading-[1.55] text-white/[0.62] [text-wrap:pretty]">
+                {r.excerpt}
+              </div>
               {r.tags?.length > 0 && (
-                <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   {r.tags.map((tag) => (
-                    <span key={tag} style={{ padding: "3px 8px", borderRadius: 8, background: "rgba(169,180,255,.12)", border: "1px solid rgba(169,180,255,.25)", color: "#dfe3ff", fontSize: 11, fontWeight: 600 }}>#{tag}</span>
+                    <span key={tag} className="rounded-lg border border-[#a9b4ff]/25 bg-[#a9b4ff]/[0.12] px-2 py-[3px] text-[11px] font-semibold text-[#dfe3ff]">
+                      #{tag}
+                    </span>
                   ))}
                 </div>
               )}
-              <div style={{ marginTop: 9, display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11.5, color: "rgba(238,240,255,.5)", fontFamily: "'DM Mono',monospace" }}>
+              <div className="mt-[9px] flex flex-wrap gap-2 font-mono text-[11.5px] text-white/50">
                 <span>{r.type}</span><span>·</span><span>{r.project}</span><span>·</span><span>{r.meta}</span>
               </div>
             </div>
-            <div style={{ flex: "0 0 auto", alignSelf: "center", opacity: .4, fontSize: 15 }}>›</div>
-          </El>
+            <div className="flex-none self-center text-[15px] opacity-40">›</div>
+          </div>
         ))}
       </div>
     </>

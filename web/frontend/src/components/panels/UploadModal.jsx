@@ -1,17 +1,18 @@
 import React, { useRef, useState } from "react";
-import El from "../../lib/El.jsx";
 import { documents, project } from "../../api/index.js";
 
-const inactiveStyle = "padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:inherit";
-const activeStyle = "padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(95,227,161,.4);background:rgba(95,227,161,.14);color:#8ff0c0";
+const CHIP_INACTIVE =
+  "px-3 py-1.5 rounded-[10px] text-xs font-semibold cursor-pointer border border-white/[0.14] bg-white/[0.07] text-inherit";
+const CHIP_ACTIVE =
+  "px-3 py-1.5 rounded-[10px] text-xs font-semibold cursor-pointer border border-[#5fe3a1]/40 bg-[#5fe3a1]/[0.14] text-[#8ff0c0]";
 
-export default function UploadModal({ 
-  closePanel, 
-  stop, 
-  projectChips, 
-  target, 
-  onUploaded, 
-  onProjectSelected, 
+export default function UploadModal({
+  closePanel,
+  stop,
+  projectChips,
+  target,
+  onUploaded,
+  onProjectSelected,
   showToast,
 
   masterTags = [],
@@ -58,8 +59,8 @@ export default function UploadModal({
 
   const handleParentChipClick = (chip) => {
     // Clear all local/newly created project selections first
-    setLocalProjects((previous) => 
-      previous.map((item) => ({ ...item, active: false, style: inactiveStyle }))
+    setLocalProjects((previous) =>
+      previous.map((item) => ({ ...item, active: false }))
     );
     chip.pick();
   };
@@ -72,7 +73,6 @@ export default function UploadModal({
     setLocalProjects((previous) => previous.map((item) => ({
       ...item,
       active: item.name === name,
-      style: item.name === name ? activeStyle : inactiveStyle,
     })));
   };
 
@@ -85,7 +85,7 @@ export default function UploadModal({
     try {
       const response = await project.createProject(name, newProjectDescription.trim());
       if (!response.ok) throw new Error((await response.text()) || "Failed to create project.");
-      
+
       const created = await response.json();
       const finalName = created.name || name;
 
@@ -95,14 +95,12 @@ export default function UploadModal({
       const newChipObject = {
         name: finalName,
         active: true,
-        style: activeStyle
       };
 
       setLocalProjects((prev) => {
         const cleanedPrev = prev.map(item => ({
           ...item,
           active: false,
-          style: inactiveStyle
         }));
         return [...cleanedPrev, newChipObject];
       });
@@ -151,7 +149,7 @@ export default function UploadModal({
 
           return document;
         }));
-        
+
         // Pass up active local project state context to update parent layout registers
         await onUploaded?.();
         showToast?.("Document uploaded successfully.");
@@ -169,83 +167,94 @@ export default function UploadModal({
   };
 
   return (
-    <div onClick={handleClose} style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(4,5,12,.6)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 20, overflowY: "auto" }}>
-      <div onClick={stop} style={{ width: "min(520px,100%)", maxHeight: "calc(100vh - 40px)", overflowY: "auto", padding: "clamp(20px,3vw,30px)", borderRadius: 28, background: "linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05))", backdropFilter: "blur(34px) saturate(180%)", border: "1px solid rgba(255,255,255,.17)", boxShadow: "inset 0 1px 0 rgba(255,255,255,.35), 0 34px 80px rgba(0,0,0,.6)" }}>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>Add to the hub</div>
-        <div style={{ marginTop: 6, fontSize: 13.5, color: "rgba(238,240,255,.62)" }}>Upload files or paste a link.</div>
+    <div onClick={handleClose} className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[#04050c]/60 p-5 backdrop-blur-[8px]">
+      <div onClick={stop} className="max-h-[calc(100vh-40px)] w-[min(520px,100%)] overflow-y-auto rounded-[28px] border border-white/[0.17] bg-gradient-to-br from-white/[0.14] to-white/5 p-[clamp(20px,3vw,30px)] shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_34px_80px_rgba(0,0,0,.6)] backdrop-blur-[34px]">
+        <div className="text-xl font-bold">Add to the hub</div>
+        <div className="mt-1.5 text-[13.5px] text-white/[0.62]">Upload files or paste a link.</div>
 
-        <input ref={fileInputRef} type="file" onChange={(event) => handleFiles(event.target.files)} multiple accept=".pdf,.md" style={{ display: "none" }} />
+        <input ref={fileInputRef} type="file" onChange={(event) => handleFiles(event.target.files)} multiple accept=".pdf,.md" className="hidden" />
         <div
           onClick={() => fileInputRef.current?.click()}
           onDragEnter={(event) => { event.preventDefault(); setDragActive(true); }}
           onDragOver={(event) => event.preventDefault()}
           onDragLeave={() => setDragActive(false)}
           onDrop={(event) => { event.preventDefault(); setDragActive(false); handleFiles(event.dataTransfer.files); }}
-          style={{ marginTop: 18, padding: 28, borderRadius: 20, cursor: "pointer", textAlign: "center", border: dragActive ? "1px dashed rgba(169,180,255,.75)" : "1px dashed rgba(255,255,255,.25)", background: dragActive ? "rgba(169,180,255,.1)" : "rgba(255,255,255,.05)" }}
+          className={`mt-[18px] cursor-pointer rounded-[20px] border border-dashed p-7 text-center ${
+            dragActive ? "border-[#a9b4ff]/75 bg-[#a9b4ff]/10" : "border-white/25 bg-white/5"
+          }`}
         >
-          <div style={{ fontSize: 24 }}>⤒</div>
-          <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600 }}>Drop PDFs or Markdown files</div>
-          <div style={{ marginTop: 4, fontSize: 12, color: "rgba(238,240,255,.55)" }}>or click to browse, up to 50 MB each</div>
+          <div className="text-2xl">⤒</div>
+          <div className="mt-2 text-sm font-semibold">Drop PDFs or Markdown files</div>
+          <div className="mt-1 text-xs text-white/[0.55]">or click to browse, up to 50 MB each</div>
         </div>
 
-        {selectedFiles.length > 0 && <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
-          {selectedFiles.map((file, index) => <div key={`${file.name}-${index}`} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,.04)", fontSize: 12.5 }}>
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>📄 {file.name}</span>
-            <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedFiles((previous) => previous.filter((_, itemIndex) => itemIndex !== index)); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,.5)", cursor: "pointer" }}>×</button>
-          </div>)}
-        </div>}
+        {selectedFiles.length > 0 && (
+          <div className="mt-3 flex flex-col gap-1.5">
+            {selectedFiles.map((file, index) => (
+              <div key={`${file.name}-${index}`} className="flex justify-between rounded-[10px] bg-white/[0.04] px-3 py-2 text-[12.5px]">
+                <span className="truncate">📄 {file.name}</span>
+                <button
+                  type="button"
+                  onClick={(event) => { event.stopPropagation(); setSelectedFiles((previous) => previous.filter((_, itemIndex) => itemIndex !== index)); }}
+                  className="border-none bg-transparent text-white/50"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
-        <El as="input" placeholder="https://medium.com…" value={urlInput} onChange={(event) => setUrlInput(event.target.value)} style="margin-top:12px;width:100%;height:44px;padding:0 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);outline:none;font-size:13.5px;color:#eef0ff" />
+        <input
+          placeholder="https://medium.com…"
+          value={urlInput}
+          onChange={(event) => setUrlInput(event.target.value)}
+          className="mt-3 h-11 w-full rounded-2xl border border-white/[0.14] bg-white/[0.07] px-4 text-[13.5px] text-[#eef0ff] outline-none"
+        />
 
         {/* --- Dynamic Tags Section --- */}
-        <div style={{ marginTop: 18, borderTop: "1px solid rgba(255,255,255,.08)", paddingTop: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(238,240,255,.75)", marginBottom: 8 }}>Select Existing Hub Tags</div>
-          
+        <div className="mt-[18px] border-t border-white/[0.08] pt-4">
+          <div className="mb-2 text-[13px] font-semibold text-white/75">Select Existing Hub Tags</div>
+
           {masterTags.length === 0 ? (
-            <div style={{ fontSize: 12, color: "rgba(238,240,255,.4)", padding: "4px 0" }}>No global tags registered yet. Create one below!</div>
+            <div className="py-1 text-xs text-white/40">No global tags registered yet. Create one below!</div>
           ) : (
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+            <div className="mb-3 flex flex-wrap gap-1.5">
               {masterTags.map((tag) => (
                 <button
                   type="button"
                   key={tag.id}
                   onClick={() => toggleMasterTagSelection(tag.name)}
-                  style={{
-                    padding: "4px 10px",
-                    borderRadius: 8,
-                    fontSize: "11.5px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                    border: tag.active ? "1px solid rgba(95,227,161,.4)" : "1px solid rgba(255,255,255,.12)",
-                    background: tag.active ? "rgba(95,227,161,.14)" : "rgba(255,255,255,.04)",
-                    color: tag.active ? "#8ff0c0" : "rgba(238,240,255,.75)"
-                  }}
+                  className={`rounded-lg px-2.5 py-1 text-[11.5px] font-semibold transition-colors ${
+                    tag.active
+                      ? "border border-[#5fe3a1]/40 bg-[#5fe3a1]/[0.14] text-[#8ff0c0]"
+                      : "border border-white/[0.12] bg-white/[0.04] text-white/75"
+                  }`}
                 >
                   #{tag.name}
                 </button>
               ))}
             </div>
           )}
-          <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(238,240,255,.75)", marginTop: 12, marginBottom: 8 }}>
-            Create & Apply New Tags
+          <div className="mb-2 mt-3 text-[13px] font-semibold text-white/75">
+            Create &amp; Apply New Tags
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="flex flex-col gap-1.5">
             {newTagFields.map((field, idx) => (
-              <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div key={idx} className="flex items-center gap-2">
                 <input
                   type="text"
                   placeholder="Enter tag value (e.g. security-v2)..."
                   value={field}
                   onChange={(e) => handleTagFieldChange(idx, e.target.value)}
-                  style={{ flex: 1, height: 32, borderRadius: 8, background: "rgba(0,0,0,.2)", border: "1px solid rgba(255,255,255,.1)", color: "#fff", padding: "0 10px", fontSize: 12.5, outline: "none" }}
+                  className="h-8 flex-1 rounded-lg border border-white/10 bg-black/20 px-2.5 text-[12.5px] text-white outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => removeTagField(idx)}
-                  style={{ background: "none", border: "none", color: "rgba(255,255,255,.4)", cursor: "pointer", fontSize: 16, padding: "0 4px" }}
                   title="Remove field slot"
+                  className="border-none bg-transparent px-1 text-base text-white/40"
                 >
                   ×
                 </button>
@@ -256,46 +265,79 @@ export default function UploadModal({
           <button
             type="button"
             onClick={addAnotherTagField}
-            style={{ marginTop: 8, background: "none", border: "none", color: "#8ff0c0", fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "4px 0", display: "inline-block" }}
+            className="mt-2 inline-block border-none bg-transparent py-1 text-xs font-semibold text-[#8ff0c0]"
           >
             + Add another tag input
           </button>
 
           {tagError && (
-            <div role="alert" style={{ marginTop: 6, color: "#ff6aa8", fontSize: 11.5 }}>
+            <div role="alert" className="mt-1.5 text-[11.5px] text-[#ff6aa8]">
               {tagError}
             </div>
           )}
         </div>
 
         {/* --- Target Project Section --- */}
-        <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(238,240,255,.7)" }}>Target project</div>
-          <button type="button" onClick={() => setIsCreatingProject((value) => !value)} style={{ fontSize: 12, fontWeight: 600, background: "none", color: "#8ff0c0", cursor: "pointer", padding: "4px 8px", borderRadius: 6, border: "1px solid rgba(95,227,161,.2)" }}>{isCreatingProject ? "Cancel" : "+ Create project"}</button>
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-[13px] font-semibold text-white/70">Target project</div>
+          <button
+            type="button"
+            onClick={() => setIsCreatingProject((value) => !value)}
+            className="rounded-md border border-[#5fe3a1]/20 bg-transparent px-2 py-1 text-xs font-semibold text-[#8ff0c0]"
+          >
+            {isCreatingProject ? "Cancel" : "+ Create project"}
+          </button>
         </div>
 
-        {isCreatingProject && <form onSubmit={createProject} style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
-          <input type="text" placeholder="New project name..." value={newProjectName} onChange={(event) => setNewProjectName(event.target.value)} autoFocus style={{ width: "100%", height: 32, borderRadius: 8, background: "rgba(0,0,0,.2)", border: "1px solid rgba(255,255,255,.1)", color: "#fff", padding: "0 10px", fontSize: 12.5 }} />
-          <textarea placeholder="Project description..." value={newProjectDescription} onChange={(event) => setNewProjectDescription(event.target.value)} rows={3} style={{ width: "100%", borderRadius: 8, background: "rgba(0,0,0,.2)", border: "1px solid rgba(255,255,255,.1)", color: "#fff", padding: "8px 10px", fontSize: 12.5, resize: "vertical", fontFamily: "inherit" }} />
-          <button type="submit" style={{ alignSelf: "flex-end", height: 32, padding: "0 12px", borderRadius: 8, background: "#8ff0c0", color: "#12142a", border: "none", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>Save</button>
-        </form>}
-        {projectError && <div role="alert" style={{ marginTop: 6, color: "#ff6aa8", fontSize: 11.5 }}>{projectError}</div>}
-
-        <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {projectChips.map((chip) => <El as="button" key={chip.name} onClick={() => handleParentChipClick(chip)} style={chip.style}>{chip.name}</El>)}
-          {localProjects.map((chip) => <El as="button" key={chip.name} onClick={() => selectLocalProject(chip.name)} style={chip.style}>{chip.name}</El>)}
-        </div>
-
-        <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button type="button" onClick={handleClose} style={{ height: 42, padding: "0 18px", borderRadius: 14, border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.07)", cursor: "pointer", color: "inherit" }}>Cancel</button>
-            <button 
-                type="button" 
-                onClick={uploadOrIndex} 
-                disabled={isUploading} 
-                style={{ height: 42, padding: "0 20px", borderRadius: 14, border: "1px solid rgba(255,255,255,.22)", background: "rgba(255,255,255,.92)", color: "#12142a", fontWeight: 600, cursor: isUploading ? "wait" : "pointer" }}
-                >
-                {isUploading ? "Uploading..." : `Add to ${localProjects.find((item) => item.active)?.name || projectChips.find((item) => item.active)?.name || target}`}
+        {isCreatingProject && (
+          <form onSubmit={createProject} className="mt-2 flex flex-col gap-2">
+            <input
+              type="text"
+              placeholder="New project name..."
+              value={newProjectName}
+              onChange={(event) => setNewProjectName(event.target.value)}
+              autoFocus
+              className="h-8 w-full rounded-lg border border-white/10 bg-black/20 px-2.5 text-[12.5px] text-white"
+            />
+            <textarea
+              placeholder="Project description..."
+              value={newProjectDescription}
+              onChange={(event) => setNewProjectDescription(event.target.value)}
+              rows={3}
+              className="w-full resize-y rounded-lg border border-white/10 bg-black/20 px-2.5 py-2 font-sans text-[12.5px] text-white"
+            />
+            <button type="submit" className="h-8 self-end rounded-lg border-none bg-[#8ff0c0] px-3 text-xs font-semibold text-[#12142a]">
+              Save
             </button>
+          </form>
+        )}
+        {projectError && <div role="alert" className="mt-1.5 text-[11.5px] text-[#ff6aa8]">{projectError}</div>}
+
+        <div className="mt-2.5 flex flex-wrap gap-2">
+          {projectChips.map((chip) => (
+            <button key={chip.name} onClick={() => handleParentChipClick(chip)} className={chip.active ? CHIP_ACTIVE : CHIP_INACTIVE}>
+              {chip.name}
+            </button>
+          ))}
+          {localProjects.map((chip) => (
+            <button key={chip.name} onClick={() => selectLocalProject(chip.name)} className={chip.active ? CHIP_ACTIVE : CHIP_INACTIVE}>
+              {chip.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-5 flex justify-end gap-2.5">
+          <button type="button" onClick={handleClose} className="h-[42px] rounded-2xl border border-white/[0.16] bg-white/[0.07] px-[18px] text-inherit">
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={uploadOrIndex}
+            disabled={isUploading}
+            className="h-[42px] rounded-2xl border border-white/[0.22] bg-white/[0.92] px-5 font-semibold text-[#12142a] disabled:cursor-wait"
+          >
+            {isUploading ? "Uploading..." : `Add to ${localProjects.find((item) => item.active)?.name || projectChips.find((item) => item.active)?.name || target}`}
+          </button>
         </div>
       </div>
     </div>

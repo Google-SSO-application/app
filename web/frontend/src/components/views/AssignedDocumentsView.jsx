@@ -1,46 +1,71 @@
-import El from "../../lib/El.jsx";
-
 export default function AssignedDocumentsView({ documents = [], loading, error, refresh, updateStatus }) {
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ flex: "1 1 auto", fontSize: "clamp(20px,2.6vw,26px)", fontWeight: 700 }}>Assigned to me</div>
-        <button onClick={refresh} disabled={loading} style={{ height: 34, padding: "0 12px", borderRadius: 11, border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.08)", color: "inherit", cursor: "pointer", fontSize: 12.5, fontWeight: 600 }}>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 text-[clamp(20px,2.6vw,26px)] font-bold">Assigned to me</div>
+        <button
+          onClick={refresh}
+          disabled={loading}
+          className="h-[34px] rounded-[11px] border border-white/[0.16] bg-white/[0.08] px-3 text-[12.5px] font-semibold text-inherit"
+        >
           {loading ? "Refreshing…" : "Refresh"}
         </button>
       </div>
-      {error && <div role="alert" style={{ padding: 14, borderRadius: 14, background: "rgba(255,106,168,.12)", color: "#ffd4e5", fontSize: 13 }}>{error}</div>}
-      {!loading && !error && !documents.length && <div style={{ padding: 34, textAlign: "center", borderRadius: 22, border: "1px dashed rgba(255,255,255,.2)", color: "rgba(238,240,255,.58)" }}>No documents assigned for review.</div>}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {error && (
+        <div role="alert" className="rounded-2xl bg-[#ff6aa8]/[0.12] p-3.5 text-[13px] text-[#ffd4e5]">
+          {error}
+        </div>
+      )}
+      {!loading && !error && !documents.length && (
+        <div className="rounded-[22px] border border-dashed border-white/20 p-[34px] text-center text-white/[0.58]">
+          No documents assigned for review.
+        </div>
+      )}
+      <div className="flex flex-col gap-2.5">
         {documents.map((doc) => (
-          <El as="div" key={doc.id} style="display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:20px;background:linear-gradient(165deg,rgba(255,255,255,.1),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.12)">
+          <div
+            key={doc.id}
+            className="flex items-center gap-3.5 rounded-[20px] border border-white/[0.12] bg-gradient-to-br from-white/10 to-white/[0.04] px-[18px] py-4"
+          >
             <a
               href={`/web/uploads/${doc.file_name}`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Open ${doc.title || doc.file_name}`}
-              style={{ textDecoration: "none", color: "inherit", display: "block" }}
+              className="block text-inherit no-underline"
             >
-              <div style={{ width: 44, height: 44, borderRadius: 14, display: "grid", placeItems: "center", background: "rgba(255,255,255,.09)", cursor: "pointer" }}>
+              <div className="grid h-11 w-11 cursor-pointer place-items-center rounded-2xl bg-white/[0.09]">
                 {doc.file_type === "pdf" ? "▤" : "≡"}
               </div>
             </a>
-            <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+            <div className="min-w-0 flex-1">
               <a
                 href={`/web/uploads/${doc.file_name}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#eef0ff", textDecoration: "none", fontSize: 15.5, fontWeight: 600 }}
+                className="text-[15.5px] font-semibold text-[#eef0ff] no-underline"
               >
                 {doc.title || doc.file_name}
               </a>
-              <div style={{ marginTop: 6, fontSize: 12.5, color: "rgba(238,240,255,.58)" }}>{doc.project_name || doc.projectName || "Unassigned"} · submitted by {doc.owner_id}</div>
+              <div className="mt-1.5 text-[12.5px] text-white/[0.58]">
+                {doc.project_name || doc.projectName || "Unassigned"} · submitted by {doc.owner_id}
+              </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => updateStatus(doc.id, "published")} style={{ height: 32, padding: "0 12px", borderRadius: 9, border: "1px solid rgba(95,227,161,.3)", background: "rgba(95,227,161,.12)", color: "#8ff0c0", fontWeight: 600, cursor: "pointer" }}>Approve</button>
-              <button onClick={() => updateStatus(doc.id, "rejected")} style={{ height: 32, padding: "0 12px", borderRadius: 9, border: "1px solid rgba(255,106,168,.3)", background: "rgba(255,106,168,.12)", color: "#ffd4e5", fontWeight: 600, cursor: "pointer" }}>Reject</button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => updateStatus(doc.id, "published")}
+                className="h-8 rounded-[9px] border border-[#5fe3a1]/30 bg-[#5fe3a1]/[0.12] px-3 font-semibold text-[#8ff0c0]"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => updateStatus(doc.id, "rejected")}
+                className="h-8 rounded-[9px] border border-[#ff6aa8]/30 bg-[#ff6aa8]/[0.12] px-3 font-semibold text-[#ffd4e5]"
+              >
+                Reject
+              </button>
             </div>
-          </El>
+          </div>
         ))}
       </div>
     </>
