@@ -89,6 +89,13 @@ export default function UploadsView({ documents = [], loading, error, refresh, o
                 <span style={{ padding: "4px 8px", borderRadius: 999, fontSize: 11, fontWeight: 600, ...Object.fromEntries(statusStyle(doc.status).split(";").filter(Boolean).map((rule) => rule.split(":").map((part) => part.trim()))) }}>{doc.status}</span>
               </div>
               <div style={{ marginTop: 6, fontSize: 12.5, color: "rgba(238,240,255,.58)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.fileName}</div>
+              {doc.tags?.length > 0 && (
+                <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {doc.tags.map((tag) => (
+                    <span key={tag} style={{ padding: "3px 8px", borderRadius: 8, background: "rgba(95,227,161,.12)", border: "1px solid rgba(95,227,161,.25)", color: "#8ff0c0", fontSize: 11, fontWeight: 600 }}>#{tag}</span>
+                  ))}
+                </div>
+              )}
               <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11.5, color: "rgba(238,240,255,.45)", fontFamily: "'DM Mono',monospace" }}>
                 <span>{doc.projectName || "Unassigned"}</span><span>·</span><span>{(doc.fileType || "file").toUpperCase()}</span><span>·</span><span>uploaded {formatDate(doc.createdAt)}</span>
               </div>

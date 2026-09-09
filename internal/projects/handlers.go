@@ -14,13 +14,13 @@ type HttpHandler struct {
 	service *Service
 }
 
-func NewHttpHandler(service *Service) *HttpHandler {
-	return &HttpHandler{service: service}
-}
-
 type createRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+}
+
+func NewHttpHandler(service *Service) *HttpHandler {
+	return &HttpHandler{service: service}
 }
 
 func (h *HttpHandler) CreateHandler(w http.ResponseWriter, r *http.Request) {

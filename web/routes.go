@@ -51,6 +51,10 @@ func NewRouter(
 			r.Post("/docs/remove-reviewer", docsHandler.RemoveReviewerHandler)
 			r.Get("/docs/reviews", docsHandler.ListReviewDocsHandler)
 			r.Post("/docs/reviews/status", docsHandler.UpdateReviewStatusHandler)
+			r.Get("/tags", docsHandler.ListTagsHandler) 
+			r.Post("/tags", docsHandler.CreateGlobalTagHandler)
+			r.Post("/docs/tags", docsHandler.CreateDocTagsHandler)
+			r.Get("/docs/count", docsHandler.GetCountHandler) 
 
 			// User Directory Operations
 			r.Get("/users/teammates", usersHandler.ListTeammatesHandler)

@@ -1,10 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { documents } from "../api/index.js";
 
 export function useUploads(signedIn) {
   const [uploadedDocs, setUploadedDocs] = useState([]);
   const [uploadsLoading, setUploadsLoading] = useState(false);
   const [uploadsError, setUploadsError] = useState("");
+  const [uploadedDocsCount, setUploadedDocsCount] = useState(0);
 
   const refreshUploadedDocs = useCallback(async () => {
     if (!signedIn) return;
@@ -28,5 +29,27 @@ export function useUploads(signedIn) {
     }
   }, [signedIn]);
 
-  return { uploadedDocs, uploadsLoading, uploadsError, refreshUploadedDocs };
+  const refreshCount = useCallback(async () => {
+    if (!signedIn) return;
+    try {
+      const response = await documents.getUploadsCount();
+      if (response.ok) {
+        const data = await response.json();
+        setUploadedDocsCount(typeof data.count === "number" ? data.count : 0);
+      }
+    } catch (err) {
+      console.error("Could not fetch user uploads count:", err);
+    }
+  }, [signedIn]);
+
+  useEffect(() => {
+    if (signedIn) {
+      refreshCount();
+    } else {
+      setUploadedDocsCount(0);
+      setUploadedDocs([]);
+    }
+  }, [signedIn, refreshCount]);
+
+  return { uploadedDocs, uploadsLoading, uploadsError, uploadedDocsCount, refreshUploadedDocs, refreshCount };
 }

@@ -54,3 +54,36 @@ export async function updateReviewStatus(documentId, status) {
     body: JSON.stringify({ document_id: documentId, status }),
   });
 }
+
+export async function getGlobalTags() {
+  return fetch("/web/tags", { credentials: "include" });
+}
+
+export async function createGlobalTag(name) {
+  return fetch("/web/tags", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function applyTagsToDocument(documentId, tagsArray) {
+  return fetch("/web/docs/tags", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      document_id: documentId,
+      tags: tagsArray,
+    }),
+  });
+}
+
+export async function getUploadsCount() {
+  const response = await fetch("/web/docs/count", {
+    method: "GET",
+    credentials: "include",
+  });
+  return response;
+}

@@ -20,6 +20,19 @@ type assignReviewerRequest struct {
 	ReviewerID string `json:"reviewer_id"`
 }
 
+type countResponse struct {
+	Count int `json:"count"`
+}
+
+type createTagGlobalRequest struct {
+	Name string `json:"name"`
+}
+
+type createTagRequest struct {
+	DocumentID string `json:"document_id"`
+	Tags       []string `json:"tags"`
+}
+
 func NewHttpHandler(s *Service) *HttpHandler {
 	return &HttpHandler{s: s}
 }
@@ -223,6 +236,29 @@ func (h *HttpHandler) ListReviewDocsHandler(w http.ResponseWriter, r *http.Reque
 	_ = json.NewEncoder(w).Encode(reviewDocs)
 }
 
+func (h *HttpHandler) ListTagsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ac := authz.FromContext(r.Context())
+	if !ac.Authenticated {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tags, err := h.s.ListAllTags(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(tags)
+}
+
 func (h *HttpHandler) UpdateReviewStatusHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -256,4 +292,90 @@ func (h *HttpHandler) UpdateReviewStatusHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *HttpHandler) CreateGlobalTagHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ac := authz.FromContext(r.Context())
+	if !ac.Authenticated {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req createTagGlobalRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	tag, err := h.s.CreateTag(r.Context(), req.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(tag)
+}
+
+func (h *HttpHandler) CreateDocTagsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ac := authz.FromContext(r.Context())
+	if !ac.Authenticated {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req createTagRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	docUUID, err := uuid.Parse(req.DocumentID)
+	if err != nil {
+		http.Error(w, "Invalid document UUID format", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.s.AddTagsToDoc(r.Context(), docUUID, req.Tags); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_, _ = w.Write([]byte(`{"message":"Tags applied successfully"}`))
+}
+
+func (h *HttpHandler) GetCountHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ac := authz.FromContext(r.Context())
+	if !ac.Authenticated || ac.UserID == uuid.Nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	count, err := h.s.GetUserUploadsCount(r.Context(), ac.UserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(countResponse{Count: count})
 }

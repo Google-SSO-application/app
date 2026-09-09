@@ -33,6 +33,8 @@ type Config struct {
 	RefreshTokenTTL  time.Duration
 
 	UploadDir string
+
+	
 }
 
 func LoadConfig() (*Config, error) {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -21,24 +20,17 @@ type HandlerConfig struct {
 	CookieSecure bool
 }
 
-type GoogleUserInfo struct {
-	Sub           string `json:"sub"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Name          string `json:"name"`
-	Picture       string `json:"picture"`
-	HD            string `json:"hd"`
-}
-
-type RefreshClaims struct {
-	Email string `json:"email"`
-	jwt.RegisteredClaims
-}
-
 type Session struct {
 	UserID uuid.UUID
 	Email  string
 	Role   string
+}
+
+// JWT payload for refresh tokens.
+// RefreshTokenIssuer mints and validates JWT refresh tokens.
+type RefreshTokenIssuer struct {
+	secret []byte
+	ttl    time.Duration
 }
 
 type TokenStore interface {

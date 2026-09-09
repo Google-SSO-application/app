@@ -95,3 +95,38 @@ func (s *Service) UpdateReviewStatus(ctx context.Context, docID, reviewerID uuid
 	}
 	return s.repo.UpdateReviewStatus(ctx, docID, reviewerID, status)
 }
+
+func (s *Service) ListAllTags(ctx context.Context) ([]types.Tag, error) {
+	return s.repo.ListAllTags(ctx)
+}
+
+func (s *Service) CreateTag(ctx context.Context, name string) (*types.Tag, error) {
+	cleanName := strings.TrimSpace(name)
+	if cleanName == "" {
+		return nil, errors.New("tag name cannot be empty")
+	}
+	return s.repo.CreateTag(ctx, cleanName)
+}
+
+func (s *Service) AddTagsToDoc(ctx context.Context, docID uuid.UUID, tags []string) error {
+	for _, tag := range tags {
+		cleanTag := strings.TrimSpace(tag)
+		if cleanTag == "" {
+			continue
+		}
+		
+		cleanTag = strings.ToLower(cleanTag)
+		
+		if err := s.repo.AddTagToDocument(ctx, docID, cleanTag); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) GetUserUploadsCount(ctx context.Context, ownerID uuid.UUID) (int, error) {
+	if ownerID == uuid.Nil {
+		return 0, errors.New("invalid owner identity context")
+	}
+	return s.repo.GetUploadsCount(ctx, ownerID)
+}

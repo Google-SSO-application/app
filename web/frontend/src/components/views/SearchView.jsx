@@ -53,6 +53,13 @@ export default function SearchView({
                 <span style={cssToObj(r.badgeStyle)}>{r.badge}</span>
               </div>
               <div style={{ marginTop: 5, fontSize: 13.5, lineHeight: 1.55, color: "rgba(238,240,255,.62)", textWrap: "pretty", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{r.excerpt}</div>
+              {r.tags?.length > 0 && (
+                <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {r.tags.map((tag) => (
+                    <span key={tag} style={{ padding: "3px 8px", borderRadius: 8, background: "rgba(169,180,255,.12)", border: "1px solid rgba(169,180,255,.25)", color: "#dfe3ff", fontSize: 11, fontWeight: 600 }}>#{tag}</span>
+                  ))}
+                </div>
+              )}
               <div style={{ marginTop: 9, display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11.5, color: "rgba(238,240,255,.5)", fontFamily: "'DM Mono',monospace" }}>
                 <span>{r.type}</span><span>·</span><span>{r.project}</span><span>·</span><span>{r.meta}</span>
               </div>

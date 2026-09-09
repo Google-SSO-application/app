@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -23,6 +22,15 @@ var ErrDomainNotAllowed = errors.New("google account domain is not allowed")
 type GoogleOAuth struct {
 	config        *oauth2.Config
 	allowedDomain string
+}
+
+type GoogleUserInfo struct {
+	Sub           string `json:"sub"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Name          string `json:"name"`
+	Picture       string `json:"picture"`
+	HD            string `json:"hd"`
 }
 
 // NewGoogleOAuth is the DI constructor; clientID/secret come from the
@@ -59,7 +67,7 @@ const googleUserInfoURL = "https://openidconnect.googleapis.com/v1/userinfo"
 // FetchUserInfo calls Google's userinfo endpoint using the token we just
 // received directly from Google's token endpoint over TLS, then enforces
 // the allowed-domain acceptance criterion.
-func (g *GoogleOAuth) FetchUserInfo(ctx context.Context, tok *oauth2.Token) (*types.GoogleUserInfo, error) {
+func (g *GoogleOAuth) FetchUserInfo(ctx context.Context, tok *oauth2.Token) (*GoogleUserInfo, error) {
 	client := g.config.Client(ctx, tok)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, googleUserInfoURL, nil)
@@ -77,7 +85,7 @@ func (g *GoogleOAuth) FetchUserInfo(ctx context.Context, tok *oauth2.Token) (*ty
 		return nil, fmt.Errorf("userinfo request failed: %s: %s", resp.Status, string(body))
 	}
 
-	var info types.GoogleUserInfo
+	var info GoogleUserInfo
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
 		return nil, err
 	}

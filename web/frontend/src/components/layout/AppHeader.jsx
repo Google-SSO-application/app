@@ -1,6 +1,6 @@
 import El from "../../lib/El.jsx";
 
-export default function AppHeader({ query, onQuery, toggleNav, openUpload, signOut }) {
+export default function AppHeader({ query, onQuery, toggleNav, openUpload, openGlobalTag, signOut }) {
   return (
     <header style={{ position: "sticky", top: 0, zIndex: 20, display: "flex", alignItems: "center", gap: 16, padding: "12px clamp(14px,3vw,28px)", background: "linear-gradient(180deg, rgba(12,14,28,.75), rgba(12,14,28,.45))", backdropFilter: "blur(24px) saturate(170%)", WebkitBackdropFilter: "blur(24px) saturate(170%)", borderBottom: "1px solid rgba(255,255,255,.09)" }}>
       <button onClick={toggleNav} style={{ flex: "0 0 auto", width: 38, height: 38, borderRadius: 12, border: "1px solid rgba(255,255,255,.14)", background: "rgba(255,255,255,.07)", cursor: "pointer", fontSize: 15, color: "inherit" }}>☰</button>
@@ -19,6 +19,9 @@ export default function AppHeader({ query, onQuery, toggleNav, openUpload, signO
       </div>
 
       <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
+        <El as="button" onClick={openGlobalTag} title="Create global tag"
+          style="height:38px;padding:0 14px;border-radius:12px;border:1px solid rgba(95,227,161,.28);background:rgba(95,227,161,.1);cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;color:#8ff0c0"
+          hoverStyle="background:rgba(95,227,161,.18)">＋ Tag</El>
         <El as="button" onClick={openUpload}
           style="height:38px;padding:0 16px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.07));cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;color:inherit"
           hoverStyle="background:rgba(255,255,255,.18)">＋ Upload</El>

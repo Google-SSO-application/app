@@ -1,10 +1,11 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { DOCS, THREADS, PILL, NAVBTN } from "../data.js";
 import { badge } from "../lib/badge.js";
 import { useAuth } from "./useAuth.js";
 import { useProjects } from "./useProjects.js";
 import { useResponsiveLayout } from "./useResponsiveLayout.js";
 import { useUploads } from "./useUploads.js";
+import useUploadDocs from "./useTags.js";
 import { useUiState } from "./useUiState.js";
 import useAssignedDocuments from "./useAssignedDocuments.js";
 
@@ -12,16 +13,22 @@ export function useAppState() {
   const { state: s, set, openReviewerModal, handlePickProject, closePanel, toggleNav, stop } = useUiState();
   const authState = useAuth();
   const { narrow } = useResponsiveLayout();
-  const { uploadedDocs, uploadsLoading, uploadsError, refreshUploadedDocs } = useUploads(authState.signedIn);
+  const { uploadedDocs, uploadsLoading, uploadsError, uploadedDocsCount, refreshUploadedDocs } = useUploads(authState.signedIn);
   const assignedState = useAssignedDocuments(authState.signedIn);
   const setTarget = useCallback((target) => set({ target }), [set]);
   const { projects: dynamicProjects, refreshProjects } = useProjects(authState.signedIn, s.target, setTarget);
+  const uploadTagState = useUploadDocs(authState, refreshUploadedDocs, refreshProjects);
+  const [globalTagOpen, setGlobalTagOpen] = useState(false);
 
   useEffect(() => {
     if (authState.authReady && authState.signedIn) {
       refreshUploadedDocs();
       refreshProjects();
       assignedState.refreshAssignedDocuments();
+
+      if (s.view === "uploads") {
+        refreshUploadedDocs();
+      }
     }
   }, [authState.authReady, authState.signedIn, refreshUploadedDocs, refreshProjects, assignedState.refreshAssignedDocuments]);
 
@@ -107,7 +114,7 @@ export function useAppState() {
     ["search", "⌕", "Search", DOCS.length],
     ["threads", "◇", "Threads", THREADS.length],
     ["sources", "⧉", "Sources", 5],
-    ["uploads", "⤒", "My uploads", uploadedDocs.length],
+    ["uploads", "⤒", "My uploads", uploadedDocsCount],
   ];
 
   const nav = navItems.map(([id, icon, label, count]) => ({
@@ -120,7 +127,12 @@ export function useAppState() {
       (s.view === id
         ? "background:linear-gradient(160deg, rgba(255,255,255,.22), rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)"
         : "background:transparent;border:1px solid transparent;color:rgba(238,240,255,.72)"),
-    go: () => set({ view: id, navOpen: narrow ? false : true }),
+    go: () => {
+      if (id === "uploads") {
+        refreshUploadedDocs();
+      }
+      set({ view: id, navOpen: narrow ? false : true });
+      },
   }));
 
   const allProjectsCombined = [
@@ -238,6 +250,8 @@ export function useAppState() {
     });
   };
 
+  const openGlobalTag = () => setGlobalTagOpen(true);
+
   const openProjectModal = () => set({ projectModal: true });
   const openAsk = () => set({ ask: true, target: s.project === "All projects" ? s.target : s.project });
   const goSources = () => set({ view: "sources", navOpen: narrow ? false : true });
@@ -294,6 +308,7 @@ export function useAppState() {
     threads,
     sources,
     uploadedDocs,
+    uploadedDocsCount,
     uploadsLoading,
     uploadsError,
     assignedDocuments: assignedState.assignedDocuments,
@@ -302,18 +317,20 @@ export function useAppState() {
     refreshAssignedDocuments: assignedState.refreshAssignedDocuments,
     updateReviewStatus: assignedState.updateReviewStatus,
     projectModalOpen: s.projectModal,
+    refreshUploadedDocs,
     refreshUploadedDocs: refreshAllStates, // Re-binded to sync both arrays
     projectChips,
+    ...uploadTagState,
     target: s.target,
     docOpen, docV,
     threadOpen, threadV,
-    uploadOpen, askOpen,
+    uploadOpen, askOpen, globalTagOpen, setGlobalTagOpen,
     outdatedBtnLabel, outdatedBtnStyle,
     reviewerModalOpen: s.reviewerModal,
     activeReviewerDoc: s.activeReviewerDoc,
     openReviewerModal,
     toggleNav, toggleOutdated, openProjectModal,
-    openUpload, openAsk, goSources, goUploads, goAssigned, closePanel, stop,
+    openUpload, openGlobalTag, openAsk, goSources, goUploads, goAssigned, closePanel, stop,
     selectProject: handlePickProject,
     ...authState,
     signOut,
