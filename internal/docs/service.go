@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 	"github.com/google/uuid"
+	"github.com/codimite-learning/knowledge-hub/internal/pkg/vector"
 )
 
 var (
@@ -20,10 +22,11 @@ var (
 type Service struct {
 	repo    Repository
 	storage FileStorage
+	vectorClient *vector.Client
 }
 
-func NewService(repo Repository, storage FileStorage) *Service {
-	return &Service{repo: repo, storage: storage}
+func NewService(repo Repository, storage FileStorage, vc *vector.Client) *Service {
+	return &Service{repo: repo, storage: storage, vectorClient: vc}
 }
 
 func (u *Service) Upload(ctx context.Context, ownerID uuid.UUID, title string, projectID *uuid.UUID, projectName string, reviewerID *uuid.UUID, filename string, file io.Reader) (*types.Document, error) {
@@ -89,11 +92,54 @@ func (s *Service) ListReviewDocs(ctx context.Context, reviewerID uuid.UUID) ([]t
 	return s.repo.ListReviewDocs(ctx, reviewerID)
 }
 
-func (s *Service) UpdateReviewStatus(ctx context.Context, docID, reviewerID uuid.UUID, status string) error {
-	if status != "published" && status != "rejected" {
-		return errors.New("invalid review status")
+func (s *Service) ProcessReviewWorkflow(ctx context.Context, docID, reviewerID uuid.UUID, status string) error {
+	doc, err := s.repo.GetByID(ctx, docID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch document metadata: %w", err)
 	}
-	return s.repo.UpdateReviewStatus(ctx, docID, reviewerID, status)
+
+	var contentToEmbed string
+	var vectorValues []float32
+
+	if status == "published" {
+		switch doc.FileType {
+		case "md":
+			fileBytes, err := os.ReadFile(doc.FilePath)
+			if err != nil {
+				return fmt.Errorf("failed to read markdown file from internal volume: %w", err)
+			}
+			contentToEmbed = string(fileBytes)
+
+		case "pdf":
+			contentToEmbed = fmt.Sprintf("Title: %s. File: %s", doc.Title, doc.FileName)
+
+		default:
+			return fmt.Errorf("unsupported document file format type pipeline rule: %s", doc.FileType)
+		}
+
+		formattedPrompt := fmt.Sprintf("title: %s | text: %s", doc.Title, contentToEmbed)
+
+		vectorValues, err = s.vectorClient.GenerateVector(ctx, formattedPrompt, false)
+		if err != nil {
+			return fmt.Errorf("gemini embedding engine fault: %w", err)
+		}
+	}
+
+	if err := s.repo.PublishDocumentWithVector(ctx, docID, reviewerID, status, contentToEmbed, vectorValues); err != nil {
+		return fmt.Errorf("failed to update document review workflow state: %w", err)
+	}
+
+	return nil
+}
+
+
+func (s *Service) QueryArticlesBySemanticContext(ctx context.Context, queryTerm string, limit int) ([]types.Document, []float64, error) {
+	queryVector, err := s.vectorClient.GenerateVector(ctx, queryTerm, true)
+	if err != nil {
+		return nil, nil, fmt.Errorf("query tokenization failure: %w", err)
+	}
+
+	return s.repo.FindByVectorSimilarity(ctx, queryVector, limit)
 }
 
 func (s *Service) ListAllTags(ctx context.Context) ([]types.Tag, error) {

@@ -50,7 +50,10 @@ func NewRouter(
 			r.Post("/docs/assign-reviewer", docsHandler.AssignReviewerHandler)
 			r.Post("/docs/remove-reviewer", docsHandler.RemoveReviewerHandler)
 			r.Get("/docs/reviews", docsHandler.ListReviewDocsHandler)
-			r.Post("/docs/reviews/status", docsHandler.UpdateReviewStatusHandler)
+			r.Post("/docs/reviews/status", docsHandler.HandleReview)
+
+			r.Get("/docs/search", docsHandler.HandleSearch)
+
 			r.Get("/tags", docsHandler.ListTagsHandler) 
 			r.Post("/tags", docsHandler.CreateGlobalTagHandler)
 			r.Post("/docs/tags", docsHandler.CreateDocTagsHandler)

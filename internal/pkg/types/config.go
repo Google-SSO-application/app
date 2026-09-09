@@ -34,7 +34,7 @@ type Config struct {
 
 	UploadDir string
 
-	
+	GeminiAPIKey string
 }
 
 func LoadConfig() (*Config, error) {
@@ -64,6 +64,8 @@ func LoadConfig() (*Config, error) {
 		RefreshTokenTTL:  getEnvDuration("REFRESH_TOKEN_TTL", 7*24*time.Hour),
 
 		UploadDir: getEnv("UPLOAD_DIR", "./.data/uploads"),
+
+		GeminiAPIKey: os.Getenv("GEMINI_API_KEY"),
 	}
 
 	if cfg.PostgresDSN == "" {
@@ -71,6 +73,9 @@ func LoadConfig() (*Config, error) {
 	}
 	if cfg.GoogleClientID == "" || cfg.GoogleClientSecret == "" || cfg.GoogleRedirectURL == "" {
 		return nil, fmt.Errorf("GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URL are required")
+	}
+	if cfg.GeminiAPIKey == "" {
+		return nil, fmt.Errorf("missing mandatory environment configuration variable: GEMINI_API_KEY")
 	}
 
 	return cfg, nil

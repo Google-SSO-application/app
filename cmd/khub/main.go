@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"fmt"
 	"time"
 
 	"github.com/codimite-learning/knowledge-hub/internal/authz"
@@ -15,6 +16,7 @@ import (
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 	"github.com/codimite-learning/knowledge-hub/internal/projects"
 	"github.com/codimite-learning/knowledge-hub/internal/users"
+	"github.com/codimite-learning/knowledge-hub/internal/pkg/vector"
 	"github.com/codimite-learning/knowledge-hub/web"
 )
 
@@ -61,6 +63,11 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 
+	vectorClient, err := vector.NewClient(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to initialize gemini vector service engine: %w", err)
+	}
+
 	// domain (users)
 	userRepo := users.NewPostgresRepository(pgPool)
 	userService := users.NewService(userRepo)
@@ -74,7 +81,7 @@ func run(logger *slog.Logger) error {
 
 	// domain (docs)
 	docRepo := docs.NewPostgresRepository(pgPool)
-	docService := docs.NewService(docRepo, localStorage)
+	docService := docs.NewService(docRepo, localStorage, vectorClient)
 	docHandler := docs.NewHttpHandler(docService)
 
 	// domain (projects)

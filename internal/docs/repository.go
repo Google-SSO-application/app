@@ -2,10 +2,12 @@ package docs
 
 import (
 	"context"
+	"errors"
 
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pgvector/pgvector-go"
 )
 
 type Repository interface {
@@ -21,6 +23,8 @@ type Repository interface {
 	AddTagToDocument(ctx context.Context, docID uuid.UUID, tagName string) error
 	GetTagsByDocID(ctx context.Context, docID uuid.UUID) ([]string, error)
 	GetUploadsCount(ctx context.Context, ownerID uuid.UUID) (int, error)
+	PublishDocumentWithVector(ctx context.Context, docID, reviewerID uuid.UUID, status string, content string, vectorValues []float32) error
+	FindByVectorSimilarity(ctx context.Context, vectorValues []float32, limit int) ([]types.Document, []float64, error)
 }
 
 type PostgresRepository struct {
@@ -313,4 +317,78 @@ func (r *PostgresRepository) GetUploadsCount(ctx context.Context, ownerID uuid.U
 		return 0, err
 	}
 	return count, nil
+}
+
+func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docID, reviewerID uuid.UUID, status, content string, vectorValues []float32) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	const updateQuery = `UPDATE documents SET status = $1, updated_at = NOW() WHERE id = $2 AND reviewer_id = $3`
+	ct, err := tx.Exec(ctx, updateQuery, status, docID, reviewerID)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return errors.New("document not found or unauthorized reviewer")
+	}
+
+	if status == "published" && len(vectorValues) > 0 {
+		const insertQuery = `INSERT INTO document_embeddings (document_id, content, embedding) VALUES ($1, $2, $3)`
+		if _, err := tx.Exec(ctx, insertQuery, docID, content, pgvector.NewVector(vectorValues)); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (r *PostgresRepository) FindByVectorSimilarity(ctx context.Context, vectorValues []float32, limit int) ([]types.Document, []float64, error) {
+	const query = `
+		SELECT 
+			d.id, d.project_id, d.owner_id, d.reviewer_id, d.title, 
+			d.file_type, d.file_name, d.status, d.created_at, d.updated_at,
+			(e.embedding <=> $1) as distance,
+			coalesce(array_remove(array_agg(t.name), NULL), '{}') as tags
+		FROM document_embeddings e
+		JOIN documents d ON e.document_id = d.id
+		LEFT JOIN document_tags dt ON d.id = dt.document_id
+		LEFT JOIN tags t ON dt.tag_id = t.id
+		GROUP BY d.id, e.id
+		ORDER BY e.embedding <=> $1 ASC
+		LIMIT $2`
+
+	rows, err := r.pool.Query(ctx, query, pgvector.NewVector(vectorValues), limit)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	var documents []types.Document
+	var distances []float64
+
+	for rows.Next() {
+		var doc types.Document
+		var dist float64
+		var projectID, reviewerID uuid.NullUUID
+
+		err := rows.Scan(
+			&doc.ID, &projectID, &doc.OwnerID, &reviewerID, &doc.Title,
+			&doc.FileType, &doc.FileName, &doc.Status, &doc.CreatedAt, &doc.UpdatedAt,
+			&dist, &doc.Tags,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if projectID.Valid { doc.ProjectID = &projectID.UUID }
+		if reviewerID.Valid { doc.ReviewerID = &reviewerID.UUID }
+
+		documents = append(documents, doc)
+		distances = append(distances, dist)
+	}
+
+	return documents, distances, nil
 }

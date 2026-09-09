@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/codimite-learning/knowledge-hub/internal/authz"
+	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 )
 
 type HttpHandler struct {
@@ -20,6 +22,11 @@ type assignReviewerRequest struct {
 	ReviewerID string `json:"reviewer_id"`
 }
 
+type SearchResponse struct {
+	Document types.Document `json:"document"`
+	Distance float64        `json:"distance"`
+}
+
 type countResponse struct {
 	Count int `json:"count"`
 }
@@ -29,7 +36,7 @@ type createTagGlobalRequest struct {
 }
 
 type createTagRequest struct {
-	DocumentID string `json:"document_id"`
+	DocumentID string   `json:"document_id"`
 	Tags       []string `json:"tags"`
 }
 
@@ -259,39 +266,72 @@ func (h *HttpHandler) ListTagsHandler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(tags)
 }
 
-func (h *HttpHandler) UpdateReviewStatusHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HttpHandler) HandleReview(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	ac := authz.FromContext(r.Context())
-	if !ac.Authenticated || ac.UserID == uuid.Nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var req struct {
-		DocumentID string `json:"document_id"`
-		Status     string `json:"status"`
+		DocumentID uuid.UUID `json:"document_id"`
+		Status     string    `json:"status"` 
 	}
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, "invalid request body payload", http.StatusBadRequest)
 		return
 	}
-	docID, err := uuid.Parse(req.DocumentID)
+
+	if req.DocumentID == uuid.Nil || req.Status == "" {
+		http.Error(w, "missing required fields: document_id and status are mandatory", http.StatusBadRequest)
+		return
+	}
+
+	ac := authz.FromContext(r.Context())
+	
+	err := h.s.ProcessReviewWorkflow(r.Context(), req.DocumentID, ac.UserID, req.Status)
 	if err != nil {
-		http.Error(w, "Invalid document ID", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err := h.s.UpdateReviewStatus(r.Context(), docID, ac.UserID, req.Status); err != nil {
-		status := http.StatusInternalServerError
-		if errors.Is(err, ErrDocumentNotFound) || err.Error() == "invalid review status" {
-			status = http.StatusBadRequest
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "document review workflow updated successfully",
+		"status":  req.Status,
+	})
+}
+
+func (h *HttpHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
+	term := r.URL.Query().Get("q")
+	if term == "" {
+		http.Error(w, "query validation failed", http.StatusBadRequest)
+		return
+	}
+
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit <= 0 {
+		limit = 5
+	}
+
+	docsList, distances, err := h.s.QueryArticlesBySemanticContext(r.Context(), term, limit)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	results := make([]SearchResponse, len(docsList))
+	for i := range docsList {
+		results[i] = SearchResponse{
+			Document: docsList[i],
+			Distance: distances[i],
 		}
-		http.Error(w, err.Error(), status)
-		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(results)
 }
 
 func (h *HttpHandler) CreateGlobalTagHandler(w http.ResponseWriter, r *http.Request) {
