@@ -3,6 +3,7 @@ package docs
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 	"github.com/google/uuid"
@@ -24,7 +25,7 @@ type Repository interface {
 	GetTagsByDocID(ctx context.Context, docID uuid.UUID) ([]string, error)
 	GetUploadsCount(ctx context.Context, ownerID uuid.UUID) (int, error)
 	PublishDocumentWithVector(ctx context.Context, docID, reviewerID uuid.UUID, status string, content string, vectorValues []float32) error
-	FindByVectorSimilarity(ctx context.Context, vectorValues []float32, limit int) ([]types.Document, []float64, error)
+	FindByVectorSimilarity(ctx context.Context, vectorValues []float32, projectName string, maxDistance float64, limit int) ([]types.Document, []float64, error)
 	GetPublishedCountsByProject(ctx context.Context) (map[string]int, error)
 	GetPublishedByProject(ctx context.Context, projectName string) ([]types.Document, error)
 }
@@ -347,7 +348,7 @@ func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docI
 		    reviewer_id = CASE WHEN $1 = 'published' THEN NULL ELSE reviewer_id END,
 		    updated_at = NOW() 
 		WHERE id = $2 AND reviewer_id = $3`
-		
+
 	ct, err := tx.Exec(ctx, updateQuery, status, docID, reviewerID)
 	if err != nil {
 		return err
@@ -357,6 +358,9 @@ func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docI
 	}
 
 	if status == "published" && len(vectorValues) > 0 {
+		if _, err := tx.Exec(ctx, `DELETE FROM document_embeddings WHERE document_id = $1`, docID); err != nil {
+			return err
+		}
 		const insertQuery = `INSERT INTO document_embeddings (document_id, content, embedding) VALUES ($1, $2, $3)`
 		if _, err := tx.Exec(ctx, insertQuery, docID, content, pgvector.NewVector(vectorValues)); err != nil {
 			return err
@@ -366,22 +370,41 @@ func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docI
 	return tx.Commit(ctx)
 }
 
-func (r *PostgresRepository) FindByVectorSimilarity(ctx context.Context, vectorValues []float32, limit int) ([]types.Document, []float64, error) {
-	const query = `
-		SELECT 
-			d.id, d.project_id, d.owner_id, d.reviewer_id, d.title, 
+func (r *PostgresRepository) FindByVectorSimilarity(ctx context.Context, vectorValues []float32, projectName string, maxDistance float64, limit int) ([]types.Document, []float64, error) {
+	query := `
+		SELECT
+			d.id, d.project_id, COALESCE(p.name, '') as project_name,
+			d.owner_id, d.reviewer_id, d.title,
 			d.file_type, d.file_name, d.status, d.created_at, d.updated_at,
-			(e.embedding <=> $1) as distance,
-			coalesce(array_remove(array_agg(t.name), NULL), '{}') as tags
-		FROM document_embeddings e
-		JOIN documents d ON e.document_id = d.id
-		LEFT JOIN document_tags dt ON d.id = dt.document_id
-		LEFT JOIN tags t ON dt.tag_id = t.id
-		GROUP BY d.id, e.id
-		ORDER BY e.embedding <=> $1 ASC
-		LIMIT $2`
+			best.distance,
+			COALESCE((
+				SELECT ARRAY_AGG(t.name ORDER BY t.name)
+				FROM document_tags dt
+				JOIN tags t ON t.id = dt.tag_id
+				WHERE dt.document_id = d.id
+			), '{}') AS tags
+		FROM (
+			SELECT document_id, MIN(embedding <=> $1) as distance
+			FROM document_embeddings
+			GROUP BY document_id
+		) best
+		JOIN documents d ON d.id = best.document_id
+		LEFT JOIN projects p ON p.id = d.project_id
+		WHERE d.status = 'published'
+		  AND best.distance < $2`
 
-	rows, err := r.pool.Query(ctx, query, pgvector.NewVector(vectorValues), limit)
+	args := []interface{}{pgvector.NewVector(vectorValues), maxDistance}
+
+	if projectName != "" && projectName != "All projects" {
+		query += fmt.Sprintf(" AND p.name = $%d", len(args)+1)
+		args = append(args, projectName)
+	}
+
+	query += " ORDER BY best.distance ASC"
+	query += fmt.Sprintf(" LIMIT $%d", len(args)+1)
+	args = append(args, limit)
+
+	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -396,21 +419,19 @@ func (r *PostgresRepository) FindByVectorSimilarity(ctx context.Context, vectorV
 		var projectID, reviewerID uuid.NullUUID
 
 		err := rows.Scan(
-			&doc.ID, &projectID, &doc.OwnerID, &reviewerID, &doc.Title,
+			&doc.ID, &projectID, &doc.ProjectName, &doc.OwnerID, &reviewerID, &doc.Title,
 			&doc.FileType, &doc.FileName, &doc.Status, &doc.CreatedAt, &doc.UpdatedAt,
 			&dist, &doc.Tags,
 		)
 		if err != nil {
 			return nil, nil, err
 		}
-
 		if projectID.Valid { doc.ProjectID = &projectID.UUID }
 		if reviewerID.Valid { doc.ReviewerID = &reviewerID.UUID }
 
 		documents = append(documents, doc)
 		distances = append(distances, dist)
 	}
-
 	return documents, distances, nil
 }
 
@@ -448,7 +469,7 @@ func (r *PostgresRepository) GetPublishedByProject(ctx context.Context, projectN
 		query = `
 			SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name,
 			       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
-			       d.status, d.created_at, d.updated_at
+			       d.file_path, d.status, d.created_at, d.updated_at
 			FROM documents d
 			LEFT JOIN projects p ON p.id = d.project_id
 			WHERE d.status = 'published'
@@ -457,7 +478,7 @@ func (r *PostgresRepository) GetPublishedByProject(ctx context.Context, projectN
 		query = `
 			SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name,
 			       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
-			       d.status, d.created_at, d.updated_at
+			       d.file_path, d.status, d.created_at, d.updated_at
 			FROM documents d
 			JOIN projects p ON p.id = d.project_id
 			WHERE d.status = 'published' AND p.name = $1
@@ -476,7 +497,7 @@ func (r *PostgresRepository) GetPublishedByProject(ctx context.Context, projectN
 		var doc types.Document
 		err := rows.Scan(
 			&doc.ID, &doc.ProjectID, &doc.ProjectName, &doc.OwnerID, &doc.ReviewerID,
-			&doc.Title, &doc.FileType, &doc.FileName, &doc.FilePath, &doc.Status, 
+			&doc.Title, &doc.FileType, &doc.FileName, &doc.FilePath, &doc.Status,
 			&doc.CreatedAt, &doc.UpdatedAt,
 		)
 		if err != nil {

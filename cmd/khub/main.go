@@ -81,7 +81,7 @@ func run(logger *slog.Logger) error {
 
 	// domain (docs)
 	docRepo := docs.NewPostgresRepository(pgPool)
-	docService := docs.NewService(docRepo, localStorage, vectorClient)
+	docService := docs.NewService(docRepo, localStorage, vectorClient, cfg.MaxDistance)
 	docHandler := docs.NewHttpHandler(docService)
 
 	// domain (projects)

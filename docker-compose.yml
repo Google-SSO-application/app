@@ -59,6 +59,7 @@ services:
       REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL}
       UPLOAD_DIR: ${UPLOAD_DIR}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      MAX_DISTANCE: ${MAX_DISTANCE}
     ports:
       - "8080:8080"
     volumes:

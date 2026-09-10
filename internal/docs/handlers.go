@@ -314,26 +314,22 @@ func (h *HttpHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "query validation failed", http.StatusBadRequest)
 		return
 	}
+	projectName := r.URL.Query().Get("project")
 
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	if limit <= 0 {
-		limit = 5
+		limit = 20
 	}
 
-	docsList, distances, err := h.s.QueryArticlesBySemanticContext(r.Context(), term, limit)
+	docsList, distances, err := h.s.QueryArticlesBySemanticContext(r.Context(), term, projectName, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	results := make([]SearchResponse, len(docsList))
 	for i := range docsList {
-		results[i] = SearchResponse{
-			Document: docsList[i],
-			Distance: distances[i],
-		}
+		results[i] = SearchResponse{Document: docsList[i], Distance: distances[i]}
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(results)

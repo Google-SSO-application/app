@@ -9,6 +9,7 @@ import useUploadDocs from "./useTags.js";
 import { useUiState } from "./useUiState.js";
 import useAssignedDocuments from "./useAssignedDocuments.js";
 import { usePublishedDocs } from "./usePublishedDocs.js";
+import { useSemanticSearch } from "./useSemanticSearch.js";
 
 export function useAppState() {
   const { state: s, set, openReviewerModal, handlePickProject, closePanel, toggleNav, stop } = useUiState();
@@ -20,7 +21,9 @@ export function useAppState() {
   const { projects: dynamicProjects, refreshProjects } = useProjects(authState.signedIn, s.target, setTarget);
   const uploadTagState = useUploadDocs(authState, refreshUploadedDocs, refreshProjects);
   const [globalTagOpen, setGlobalTagOpen] = useState(false);
-  const { publishedDocs, projectCounts, publishedLoading, refreshPublishedData } = usePublishedDocs(s.project, authState.signedIn);
+  const { publishedDocs, projectCounts, publishedLoading, publishedError, refreshPublishedData } = usePublishedDocs(s.project, authState.signedIn);
+  const { searchResults, searchLoading, searchError } = useSemanticSearch(s.query, s.project, authState.signedIn);
+  const isSemanticSearch = s.query.trim().length > 0;
 
   useEffect(() => {
     if (authState.authReady && authState.signedIn) {
@@ -38,22 +41,46 @@ export function useAppState() {
   const statusOf = (d) =>
     s.outdated[d.id] ? "outdated" : d.status === "outdated" ? "current" : d.status;
 
-  const matches = (d) => {
-    const q = s.query.trim().toLowerCase();
-    if (s.types.length && !s.types.includes(d.fileType)) return false;
-    if (s.status !== "Any status" && statusOf(d) !== s.status.toLowerCase()) return false;
-    if (!q) return true;
-    return (d.title + " " + (d.fileName || "") + " " + (d.projectName || ""))
-      .toLowerCase()
-      .includes(q);
-  };
-
   // ── layout flags ─────────────────────────────────────────────────────────
   const mini = !narrow && s.collapsed;
   const wide = !mini;
 
   // ── search results ───────────────────────────────────────────────────────
-  const filteredDocs = publishedDocs.filter(matches);
+  const baseDocs = isSemanticSearch
+  ? searchResults.map((r) => ({
+      ...r.document,
+      distance: r.distance,
+
+      projectName:
+        r.document.projectName ||
+        r.document.project_name ||
+        "Unassigned",
+
+      fileType:
+        r.document.fileType ||
+        r.document.file_type ||
+        "",
+
+      fileName:
+        r.document.fileName ||
+        r.document.file_name ||
+        r.document.title ||
+        "Untitled document",
+
+      createdAt:
+        r.document.createdAt ||
+        r.document.created_at ||
+        "",
+    }))
+  : publishedDocs;
+
+  const passesTypeStatus = (d) => {
+    if (s.types.length && !s.types.includes(d.fileType)) return false;
+    if (s.status !== "Any status" && statusOf(d) !== s.status.toLowerCase()) return false;
+    return true;
+  };
+
+  const filteredDocs = baseDocs.filter(passesTypeStatus);
 
   const results = filteredDocs.map((d) => {
     const b = badge(statusOf(d));
@@ -214,6 +241,15 @@ export function useAppState() {
     await Promise.all([refreshUploadedDocs(), refreshPublishedData(), refreshProjects()]);
   };
 
+  const updateReviewStatusAndRefresh = async (docId, status) => {
+    await assignedState.updateReviewStatus(docId, status);
+    await Promise.all([
+      refreshPublishedData(),
+      assignedState.refreshAssignedDocuments(),
+      refreshUploadedDocs(),
+    ]);
+  };
+
   const signOut = async () => {
     await authState.signOut();
     set({ docId: null, threadId: null, upload: false, ask: false });
@@ -236,6 +272,8 @@ export function useAppState() {
     heroSub: s.query
       ? "Ranked across docs, READMEs, imported articles and accepted answers."
       : "Search 214 indexed documents and 68 answered threads. Filter by project, source or freshness.",
+    searchError: isSemanticSearch ? searchError : publishedError,
+    searchLoading: isSemanticSearch ? searchLoading : publishedLoading,
     suggestions,
     results,
     typeFilters,
@@ -257,6 +295,7 @@ export function useAppState() {
     projectModalOpen: s.projectModal,
     resultCount: filteredDocs.length,
     refreshUploadedDocs: refreshAllStates,
+    updateReviewStatus: updateReviewStatusAndRefresh,
     projectChips,
     ...uploadTagState,
     target: s.target,

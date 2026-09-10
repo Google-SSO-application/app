@@ -101,3 +101,14 @@ export async function getProjectPublishedCounts() {
     credentials: "include",
   });
 }
+
+export async function searchDocuments(query, projectName) {
+  const params = new URLSearchParams({ q: query });
+  if (projectName && projectName !== "All projects") {
+    params.set("project", projectName);
+  }
+  return fetch(`/web/docs/search?${params.toString()}`, {
+    method: "GET",
+    credentials: "include",
+  });
+}

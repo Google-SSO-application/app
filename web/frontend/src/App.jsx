@@ -23,6 +23,14 @@ import { useToast } from "./hooks/useToast.js";
 export default function App() {
   const v = useAppState();
   const { toast, showToast, closeToast } = useToast();
+  const handleUpdateReviewStatus = async (id, status) => {
+  try {
+    await v.updateReviewStatus(id, status);
+    showToast(status === "published" ? "Document approved." : "Document rejected.");
+  } catch (error) {
+    showToast(error.message || "Unable to update review status.", "error");
+  }
+};
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#05060c] font-sans text-[#eef0ff]">
@@ -89,6 +97,8 @@ export default function App() {
                   resultCount={v.resultCount}
                   project={v.project}
                   results={v.results}
+                  searchLoading={v.searchLoading}
+                  searchError={v.searchError}
                 />
               )}
               {v.isAssigned && (
@@ -97,14 +107,7 @@ export default function App() {
                   loading={v.assignedLoading}
                   error={v.assignedError}
                   refresh={v.refreshAssignedDocuments}
-                  updateStatus={async (id, status) => {
-                    try {
-                      await v.updateReviewStatus(id, status);
-                      showToast(status === "published" ? "Document approved." : "Document rejected.");
-                    } catch (error) {
-                      showToast(error.message || "Unable to update review status.", "error");
-                    }
-                  }}
+                  updateStatus={handleUpdateReviewStatus}
                 />
               )}
               {v.isThreads && (

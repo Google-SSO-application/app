@@ -23,10 +23,11 @@ type Service struct {
 	repo    Repository
 	storage FileStorage
 	vectorClient *vector.Client
+	maxDistance float64
 }
 
-func NewService(repo Repository, storage FileStorage, vc *vector.Client) *Service {
-	return &Service{repo: repo, storage: storage, vectorClient: vc}
+func NewService(repo Repository, storage FileStorage, vc *vector.Client, maxDistance float64) *Service {
+	return &Service{repo: repo, storage: storage, vectorClient: vc, maxDistance: maxDistance}
 }
 
 func (u *Service) Upload(ctx context.Context, ownerID uuid.UUID, title string, projectID *uuid.UUID, projectName string, reviewerID *uuid.UUID, filename string, file io.Reader) (*types.Document, error) {
@@ -133,13 +134,12 @@ func (s *Service) ProcessReviewWorkflow(ctx context.Context, docID, reviewerID u
 }
 
 
-func (s *Service) QueryArticlesBySemanticContext(ctx context.Context, queryTerm string, limit int) ([]types.Document, []float64, error) {
+func (s *Service) QueryArticlesBySemanticContext(ctx context.Context, queryTerm string, projectName string, limit int) ([]types.Document, []float64, error) {
 	queryVector, err := s.vectorClient.GenerateVector(ctx, queryTerm, true)
 	if err != nil {
 		return nil, nil, fmt.Errorf("query tokenization failure: %w", err)
 	}
-
-	return s.repo.FindByVectorSimilarity(ctx, queryVector, limit)
+	return s.repo.FindByVectorSimilarity(ctx, queryVector, projectName, s.maxDistance, limit)
 }
 
 func (s *Service) ListAllTags(ctx context.Context) ([]types.Tag, error) {

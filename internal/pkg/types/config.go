@@ -35,6 +35,7 @@ type Config struct {
 	UploadDir string
 
 	GeminiAPIKey string
+	MaxDistance float64
 }
 
 func LoadConfig() (*Config, error) {
@@ -66,6 +67,7 @@ func LoadConfig() (*Config, error) {
 		UploadDir: getEnv("UPLOAD_DIR", "/data/uploads"),
 
 		GeminiAPIKey: os.Getenv("GEMINI_API_KEY"),
+		MaxDistance: getEnvFloat("MAX_DISTANCE", 0.8),
 	}
 
 	if cfg.PostgresDSN == "" {
@@ -109,6 +111,15 @@ func getEnvInt(key string, fallback int) int {
 func getEnvDuration(key string, fallback time.Duration) time.Duration {
 	if value := os.Getenv(key); value != "" {
 		if parsed, err := time.ParseDuration(value); err == nil {
+			return parsed
+		}
+	}
+	return fallback
+}
+
+func getEnvFloat(key string, fallback float64) float64 {
+	if value := os.Getenv(key); value != "" {
+		if parsed, err := strconv.ParseFloat(value, 64); err == nil {
 			return parsed
 		}
 	}

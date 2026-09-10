@@ -14,8 +14,14 @@ export function usePublishedDocs(selectedProject, signedIn) {
     try {
       const response = await documents.getPublishedDocuments(selectedProject);
       if (!response.ok) throw new Error("Failed to fetch matching published workspace documents.");
-      const data = await response.json();
-      setPublishedDocs(data || []);
+      const docs = await response.json();
+      setPublishedDocs(Array.isArray(docs) ? docs.map((document) => ({
+        ...document,
+        projectName: document.projectName || document.project_name || "Unassigned",
+        fileType: document.fileType || document.file_type || "",
+        fileName: document.fileName || document.file_name || document.title || "Untitled document",
+        createdAt: document.createdAt || document.created_at || "",
+      })) : []);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -31,7 +37,6 @@ export function usePublishedDocs(selectedProject, signedIn) {
       if (!response.ok) throw new Error("Failed to load project database metrics counters.");
       const data = await response.json();
       
-      // Convert backend array [{project_name: "X", count: 5}] into a scannable dictionary object {"X": 5}
       const countsMap = {};
       let totalAllProjectsCount = 0;
       
