@@ -229,7 +229,10 @@ export function useAppState() {
   const openAsk = () => set({ ask: true, target: s.project === "All projects" ? s.target : s.project });
   const goSources = () => set({ view: "sources", navOpen: narrow ? false : true });
   const goUploads = () => set({ view: "uploads", navOpen: narrow ? false : true });
-  const goAssigned = () => set({ view: "assigned", navOpen: narrow ? false : true });
+  const goAssigned = () => {
+    assignedState.refreshAssignedDocuments();
+    set({ view: "assigned", navOpen: narrow ? false : true });
+  };
   const toggleOutdated = () => {
     if (!doc) return;
     const st = statusOf(doc);

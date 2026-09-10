@@ -391,7 +391,7 @@ func (r *PostgresRepository) FindByVectorSimilarity(ctx context.Context, vectorV
 		JOIN documents d ON d.id = best.document_id
 		LEFT JOIN projects p ON p.id = d.project_id
 		WHERE d.status = 'published'
-		  AND best.distance < $2`
+		  AND best.distance <= $2`
 
 	args := []interface{}{pgvector.NewVector(vectorValues), maxDistance}
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import FileViewerPanel from "../panels/FileViewerPanel.jsx";
+import { FileTypeMark } from "../common/FileTypeIcon.jsx";
 
 function formatDate(value) {
   if (!value) return "";
@@ -46,13 +47,7 @@ export default function AssignedDocumentsView({ documents = [], loading, error, 
             key={doc.id}
             className="flex items-center gap-3.5 rounded-lg border border-white/[0.12] bg-gradient-to-br from-white/10 to-white/[0.04] px-[18px] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,.24),0_16px_40px_rgba(0,0,0,.25)] backdrop-blur-2xl backdrop-saturate-[1.7]"
           >
-            <button
-              type="button"
-              onClick={() => setViewingFile(doc)}
-              className="grid h-10 w-10 flex-none place-items-center rounded-md border border-white/[0.1] bg-[#242424] text-base text-white/80"
-            >
-              {doc.fileType === "pdf" ? "▤" : "≡"}
-            </button>
+            <FileTypeMark fileType={doc.fileType} size={15} />
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
