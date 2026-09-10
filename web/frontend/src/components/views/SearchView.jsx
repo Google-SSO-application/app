@@ -55,39 +55,39 @@ export default function SearchView({
         </div>
       </div>
 
-      {/* Result cards */}
-      <div className="flex flex-col gap-2.5">
+      {/* Result cards — Windows Fluent dark document cards */}
+      <div className="flex flex-col gap-2 font-['Segoe_UI',system-ui,sans-serif]">
         {results.map((r) => (
           <div
             key={r.id}
             onClick={r.open}
-            className="flex cursor-pointer gap-3.5 rounded-[20px] border border-white/[0.12] bg-gradient-to-br from-white/10 to-white/[0.04] px-[18px] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,.24),0_16px_40px_rgba(0,0,0,.3)] backdrop-blur-2xl backdrop-saturate-[1.7] transition-[transform,background] duration-[180ms] ease-in-out hover:-translate-y-0.5 hover:bg-white/[0.13]"
+            className="flex cursor-pointer items-center gap-3.5 rounded-lg border border-white/[0.1] bg-[#2b2b2b] px-4 py-3.5 shadow-[0_2px_10px_rgba(0,0,0,.35)] transition-colors hover:bg-[#313131]"
           >
-            <div className="grid h-11 w-11 flex-none place-items-center rounded-2xl border border-white/[0.14] bg-white/[0.09] text-base">
+            <div className="grid h-10 w-10 flex-none place-items-center rounded-md border border-white/[0.1] bg-[#242424] text-base text-white/80">
               {r.icon}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-[9px]">
-                <div className="text-[15.5px] font-semibold tracking-[-.01em]">{r.title}</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="truncate text-[15px] font-semibold text-[#f5f5f5]">{r.title}</div>
                 <span className={r.badgeClassName}>{r.badge}</span>
               </div>
-              <div className="mt-[5px] line-clamp-2 text-[13.5px] leading-[1.55] text-white/[0.62] [text-wrap:pretty]">
+              <div className="mt-1 line-clamp-2 text-[13px] leading-[1.55] text-white/[0.55] [text-wrap:pretty]">
                 {r.excerpt}
               </div>
               {r.tags?.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {r.tags.map((tag) => (
-                    <span key={tag} className="rounded-lg border border-[#a9b4ff]/25 bg-[#a9b4ff]/[0.12] px-2 py-[3px] text-[11px] font-semibold text-[#dfe3ff]">
+                    <span key={tag} className="rounded border border-[#4cc2ff]/30 bg-[#4cc2ff]/10 px-2 py-[3px] text-[11px] font-semibold text-[#8fd8ff]">
                       #{tag}
                     </span>
                   ))}
                 </div>
               )}
-              <div className="mt-[9px] flex flex-wrap gap-2 font-mono text-[11.5px] text-white/50">
+              <div className="mt-2 flex flex-wrap gap-2 font-mono text-[11px] text-white/40">
                 <span>{r.type}</span><span>·</span><span>{r.project}</span><span>·</span><span>{r.meta}</span>
               </div>
             </div>
-            <div className="flex-none self-center text-[15px] opacity-40">›</div>
+            <div className="flex-none self-center text-sm text-white/30">›</div>
           </div>
         ))}
       </div>

@@ -10,8 +10,11 @@ type Client struct {
 	genaiClient *genai.Client
 }
 
-func NewClient(ctx context.Context) (*Client, error) {
-	client, err := genai.NewClient(ctx, nil)
+func NewClient(ctx context.Context, apiKey string) (*Client, error) {
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{
+		APIKey:  apiKey,
+		Backend: genai.BackendGeminiAPI,
+	})
 	if err != nil {
 		return nil, err
 	}

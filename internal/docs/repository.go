@@ -164,11 +164,20 @@ func (r *PostgresRepository) GetByID(ctx context.Context, docID uuid.UUID) (*typ
 
 func (r *PostgresRepository) ListReviewDocs(ctx context.Context, reviewerID uuid.UUID) ([]types.Document, error) {
 	query := `
-		SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name,
-		       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
-		       d.status, d.created_at, d.updated_at
+		SELECT d.id, d.project_id, COALESCE(p.name, ''),
+		       d.owner_id, d.reviewer_id,
+		       COALESCE(u.name, ''), COALESCE(u.email, ''), COALESCE(u.picture, ''),
+		       d.title, d.file_type, d.file_name,
+		       d.status, d.created_at, d.updated_at,
+		       COALESCE((
+					SELECT ARRAY_AGG(t.name ORDER BY t.name)
+					FROM document_tags dt
+					JOIN tags t ON t.id = dt.tag_id
+					WHERE dt.document_id = d.id
+				), '{}')
 		FROM documents d
 		LEFT JOIN projects p ON p.id = d.project_id
+		LEFT JOIN users u ON u.id = d.reviewer_id
 		WHERE d.reviewer_id = $1
 		ORDER BY d.created_at DESC;`
 
@@ -183,7 +192,9 @@ func (r *PostgresRepository) ListReviewDocs(ctx context.Context, reviewerID uuid
 		var d types.Document
 		err := rows.Scan(
 			&d.ID, &d.ProjectID, &d.ProjectName, &d.OwnerID, &d.ReviewerID,
-			&d.Title, &d.FileType, &d.FileName, &d.Status, &d.CreatedAt, &d.UpdatedAt,
+			&d.ReviewerName, &d.ReviewerEmail, &d.ReviewerPicture, 
+			&d.Title, &d.FileType, &d.FileName, &d.Status, &d.CreatedAt, &d.UpdatedAt, 
+			&d.Tags,
 		)
 		if err != nil {
 			return nil, err
@@ -330,7 +341,13 @@ func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docI
 	}
 	defer tx.Rollback(ctx)
 
-	const updateQuery = `UPDATE documents SET status = $1, updated_at = NOW() WHERE id = $2 AND reviewer_id = $3`
+	const updateQuery = `
+		UPDATE documents 
+		SET status = $1, 
+		    reviewer_id = CASE WHEN $1 = 'published' THEN NULL ELSE reviewer_id END,
+		    updated_at = NOW() 
+		WHERE id = $2 AND reviewer_id = $3`
+		
 	ct, err := tx.Exec(ctx, updateQuery, status, docID, reviewerID)
 	if err != nil {
 		return err

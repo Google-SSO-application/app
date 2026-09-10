@@ -63,7 +63,7 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 
-	vectorClient, err := vector.NewClient(ctx)
+	vectorClient, err := vector.NewClient(ctx, cfg.GeminiAPIKey)
 	if err != nil {
 		return fmt.Errorf("failed to initialize gemini vector service engine: %w", err)
 	}

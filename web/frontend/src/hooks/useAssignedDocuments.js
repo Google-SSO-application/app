@@ -13,8 +13,14 @@ export default function useAssignedDocuments(signedIn) {
     try {
       const response = await documents.getAssignedDocuments();
       if (!response.ok) throw new Error("Unable to load assigned documents.");
-      const data = await response.json();
-      setAssignedDocuments(Array.isArray(data) ? data : []);
+      const docs = await response.json();
+      setAssignedDocuments(Array.isArray(docs) ? docs.map((document) => ({
+        ...document,
+        projectName: document.projectName || document.project_name || "Unassigned",
+        fileType: document.fileType || document.file_type || "",
+        fileName: document.fileName || document.file_name || document.title || "Untitled document",
+        createdAt: document.createdAt || document.created_at || "",
+      })) : []);
     } catch (error) {
       setAssignedError(error.message || "Unable to load assigned documents.");
     } finally {
