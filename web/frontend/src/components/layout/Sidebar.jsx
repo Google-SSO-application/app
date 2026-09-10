@@ -42,13 +42,19 @@ export default function Sidebar({
         )}
         <div className="h-3.5" />
 
-        <div className="flex flex-col gap-1">
+        <div
+          className={
+            mini
+              ? "flex flex-col gap-1"
+              : "flex max-h-[240px] flex-col gap-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/[0.18] hover:scrollbar-thumb-white/[0.28]"
+          }
+        >
           {projectList.map((p) => (
             <button
               key={p.name}
               onClick={p.pick}
               title={p.title}
-              className={`flex h-11 items-center gap-2.5 rounded-xl px-3 text-[13.5px] font-semibold transition-colors ${
+              className={`flex h-11 flex-none items-center gap-2.5 rounded-xl px-3 text-[13.5px] font-semibold transition-colors ${
                 p.active
                   ? "border border-white/[0.16] bg-white/[0.13]"
                   : "border border-transparent bg-transparent text-white/70 hover:bg-white/[0.06]"
@@ -56,10 +62,23 @@ export default function Sidebar({
             >
               <span
                 className="h-2 w-2 flex-none rounded-full"
-                style={{ background: p.dotColor, boxShadow: `0 0 8px ${p.dotColor}88` }}
+                style={{
+                  background: p.dotColor,
+                  boxShadow: `0 0 8px ${p.dotColor}88`,
+                }}
               />
-              {!mini && <span className="flex-1 truncate text-left">{p.name}</span>}
-              {!mini && <span className="font-mono text-[11px] opacity-50">{p.count}</span>}
+
+              {!mini && (
+                <span className="flex-1 truncate text-left">
+                  {p.name}
+                </span>
+              )}
+
+              {!mini && (
+                <span className="font-mono text-[11px] opacity-50">
+                  {p.count}
+                </span>
+              )}
             </button>
           ))}
         </div>

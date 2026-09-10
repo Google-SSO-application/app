@@ -60,9 +60,31 @@ export default function UploadsView({ documents = [], loading, error, refresh, o
         {documents.map((doc) => (
           <div
             key={doc.id}
-            className="flex items-center gap-3.5 rounded-lg border border-white/[0.12] bg-gradient-to-br from-white/10 to-white/[0.04] px-[18px] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,.24),0_16px_40px_rgba(0,0,0,.25)] backdrop-blur-2xl backdrop-saturate-[1.7]"
+            className="flex items-start gap-3.5 rounded-3xl border border-white/[0.12] bg-gradient-to-br from-white/10 to-white/[0.04] px-[18px] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,.24),0_16px_40px_rgba(0,0,0,.25)] backdrop-blur-2xl backdrop-saturate-[1.7]"
           >
-            <FileTypeMark fileType={doc.fileType} size={15} />
+            <div
+              className="
+                grid
+                h-11
+                w-11
+                flex-none
+                place-items-center
+                rounded-xl
+                border
+                border-white/[0.11]
+                bg-gradient-to-br
+                from-white/[0.12]
+                to-white/[0.025]
+                shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_5px_14px_rgba(0,0,0,.22)]
+                backdrop-blur-xl
+                backdrop-saturate-[1.4]
+              "
+            >
+              <FileTypeMark
+                fileType={doc.fileType || doc.file_type}
+                size={22}
+              />
+            </div>
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -82,7 +104,7 @@ export default function UploadsView({ documents = [], loading, error, refresh, o
               {doc.tags?.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {doc.tags.map((tag) => (
-                    <span key={tag} className="rounded border border-[#4cc2ff]/30 bg-[#4cc2ff]/10 px-2 py-[3px] text-[11px] font-semibold text-[#8fd8ff]">
+                    <span key={tag} className="rounded border border-white/[0.08] bg-white/[0.05] px-2 py-[3px] text-[11px] font-semibold text-white/[0.65]">
                       #{tag}
                     </span>
                   ))}

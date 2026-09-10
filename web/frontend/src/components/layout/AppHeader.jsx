@@ -34,7 +34,7 @@ export default function AppHeader({ query, onQuery, toggleNav, openUpload, openG
           title="Create global tag"
           className="h-[38px] whitespace-nowrap rounded-xl border border-[#5fe3a1]/[0.28] bg-[#5fe3a1]/10 px-3.5 text-[13px] font-semibold text-[#8ff0c0] transition-colors hover:bg-[#5fe3a1]/[0.18]"
         >
-          ＋ Tag
+          Create Tag
         </button>
         <button
           onClick={openUpload}

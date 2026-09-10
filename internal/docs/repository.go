@@ -193,8 +193,8 @@ func (r *PostgresRepository) ListReviewDocs(ctx context.Context, reviewerID uuid
 		var d types.Document
 		err := rows.Scan(
 			&d.ID, &d.ProjectID, &d.ProjectName, &d.OwnerID, &d.ReviewerID,
-			&d.ReviewerName, &d.ReviewerEmail, &d.ReviewerPicture, 
-			&d.Title, &d.FileType, &d.FileName, &d.Status, &d.CreatedAt, &d.UpdatedAt, 
+			&d.ReviewerName, &d.ReviewerEmail, &d.ReviewerPicture,
+			&d.Title, &d.FileType, &d.FileName, &d.Status, &d.CreatedAt, &d.UpdatedAt,
 			&d.Tags,
 		)
 		if err != nil {
@@ -426,8 +426,12 @@ func (r *PostgresRepository) FindByVectorSimilarity(ctx context.Context, vectorV
 		if err != nil {
 			return nil, nil, err
 		}
-		if projectID.Valid { doc.ProjectID = &projectID.UUID }
-		if reviewerID.Valid { doc.ReviewerID = &reviewerID.UUID }
+		if projectID.Valid {
+			doc.ProjectID = &projectID.UUID
+		}
+		if reviewerID.Valid {
+			doc.ReviewerID = &reviewerID.UUID
+		}
 
 		documents = append(documents, doc)
 		distances = append(distances, dist)
@@ -467,22 +471,89 @@ func (r *PostgresRepository) GetPublishedByProject(ctx context.Context, projectN
 
 	if projectName == "All projects" {
 		query = `
-			SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name,
-			       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
-			       d.file_path, d.status, d.created_at, d.updated_at
+			SELECT
+				d.id,
+				d.project_id,
+				COALESCE(p.name, '') AS project_name,
+				d.owner_id,
+				d.reviewer_id,
+				d.title,
+				d.file_type,
+				d.file_name,
+				d.file_path,
+				d.status,
+				d.created_at,
+				d.updated_at,
+				COALESCE(
+					ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL),
+					ARRAY[]::text[]
+				) AS tags
 			FROM documents d
-			LEFT JOIN projects p ON p.id = d.project_id
+			LEFT JOIN projects p
+				ON p.id = d.project_id
+			LEFT JOIN document_tags dt
+				ON dt.document_id = d.id
+			LEFT JOIN tags t
+				ON t.id = dt.tag_id
 			WHERE d.status = 'published'
-			ORDER BY d.created_at DESC;`
+			GROUP BY
+				d.id,
+				d.project_id,
+				p.name,
+				d.owner_id,
+				d.reviewer_id,
+				d.title,
+				d.file_type,
+				d.file_name,
+				d.file_path,
+				d.status,
+				d.created_at,
+				d.updated_at
+			ORDER BY d.created_at DESC;
+		`
 	} else {
 		query = `
-			SELECT d.id, d.project_id, COALESCE(p.name, '') as project_name,
-			       d.owner_id, d.reviewer_id, d.title, d.file_type, d.file_name,
-			       d.file_path, d.status, d.created_at, d.updated_at
+			SELECT
+				d.id,
+				d.project_id,
+				COALESCE(p.name, '') AS project_name,
+				d.owner_id,
+				d.reviewer_id,
+				d.title,
+				d.file_type,
+				d.file_name,
+				d.file_path,
+				d.status,
+				d.created_at,
+				d.updated_at,
+				COALESCE(
+					ARRAY_AGG(t.name) FILTER (WHERE t.name IS NOT NULL),
+					ARRAY[]::text[]
+				) AS tags
 			FROM documents d
-			JOIN projects p ON p.id = d.project_id
-			WHERE d.status = 'published' AND p.name = $1
-			ORDER BY d.created_at DESC;`
+			JOIN projects p
+				ON p.id = d.project_id
+			LEFT JOIN document_tags dt
+				ON dt.document_id = d.id
+			LEFT JOIN tags t
+				ON t.id = dt.tag_id
+			WHERE d.status = 'published'
+				AND p.name = $1
+			GROUP BY
+				d.id,
+				d.project_id,
+				p.name,
+				d.owner_id,
+				d.reviewer_id,
+				d.title,
+				d.file_type,
+				d.file_name,
+				d.file_path,
+				d.status,
+				d.created_at,
+				d.updated_at
+			ORDER BY d.created_at DESC;
+		`
 		args = append(args, projectName)
 	}
 
@@ -493,17 +564,35 @@ func (r *PostgresRepository) GetPublishedByProject(ctx context.Context, projectN
 	defer rows.Close()
 
 	var docs []types.Document
+
 	for rows.Next() {
 		var doc types.Document
+
 		err := rows.Scan(
-			&doc.ID, &doc.ProjectID, &doc.ProjectName, &doc.OwnerID, &doc.ReviewerID,
-			&doc.Title, &doc.FileType, &doc.FileName, &doc.FilePath, &doc.Status,
-			&doc.CreatedAt, &doc.UpdatedAt,
+			&doc.ID,
+			&doc.ProjectID,
+			&doc.ProjectName,
+			&doc.OwnerID,
+			&doc.ReviewerID,
+			&doc.Title,
+			&doc.FileType,
+			&doc.FileName,
+			&doc.FilePath,
+			&doc.Status,
+			&doc.CreatedAt,
+			&doc.UpdatedAt,
+			&doc.Tags,
 		)
 		if err != nil {
 			return nil, err
 		}
+
 		docs = append(docs, doc)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return docs, nil
 }

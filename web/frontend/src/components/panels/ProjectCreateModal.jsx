@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { project } from "../../api/index.js";
+import { useConfirm } from "../../hooks/useConfirmDialog.jsx";
 
 export default function ProjectCreateModal({ closePanel, stop, onCreated, showToast }) {
+  const confirm = useConfirm();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -11,6 +13,13 @@ export default function ProjectCreateModal({ closePanel, stop, onCreated, showTo
     e.preventDefault();
     const cleanName = name.trim();
     if (!cleanName) return;
+
+    const ok = await confirm({
+      title: "Create project?",
+      message: `Create a new project workspace named "${cleanName}"?`,
+      confirmLabel: "Create",
+    });
+    if (!ok) return;
 
     setIsSaving(true);
     setError("");
@@ -22,7 +31,6 @@ export default function ProjectCreateModal({ closePanel, stop, onCreated, showTo
         throw new Error(text || "Failed to create the requested project workspace registry.");
       }
 
-      // Successfully registered to PostgreSQL backend database layer context!
       await onCreated?.();
       showToast?.("Project created successfully.");
       closePanel();

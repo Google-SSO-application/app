@@ -58,6 +58,7 @@ export default function SearchView({
           <DocumentResultCard
             key={doc.id}
             doc={doc}
+            onOpenDetail={doc.open}
             onView={() => setViewingFile(doc)}
           />
         ))}

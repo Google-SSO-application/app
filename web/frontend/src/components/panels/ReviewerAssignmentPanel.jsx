@@ -1,7 +1,9 @@
 import React from "react";
 import useReviewers from "../../hooks/useReviewers.js";
+import { useConfirm } from "../../hooks/useConfirmDialog.jsx";
 
 export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop, onAssignmentSuccess, showToast }) {
+  const confirm = useConfirm();
   const assignedReviewer = documentItem.reviewer_id
     ? {
       name: documentItem.reviewer_name,
@@ -17,6 +19,27 @@ export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop
     showToast,
   );
   const assignableUsers = teammates.filter((user) => String(user.ID) !== String(documentItem.reviewer_id));
+
+  const handleAssign = async (userId, userName) => {
+    const ok = await confirm({
+      title: assignedReviewer ? "Change reviewer?" : "Assign reviewer?",
+      message: `${userName} will review "${documentItem.title || documentItem.file_name}".`,
+      confirmLabel: assignedReviewer ? "Change" : "Assign",
+    });
+    if (!ok) return;
+    assignReviewer(userId);
+  };
+
+  const handleRemove = async () => {
+    const ok = await confirm({
+      title: "Remove reviewer?",
+      message: `${assignedReviewer?.name || "This reviewer"} will no longer be asked to review this document.`,
+      confirmLabel: "Remove",
+      danger: true,
+    });
+    if (!ok) return;
+    removeReviewer();
+  };
 
   return (
     <div
@@ -64,7 +87,7 @@ export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop
               <button
                 type="button"
                 disabled={isSubmitting}
-                onClick={removeReviewer}
+                onClick={handleRemove}
                 className="ml-auto h-7 rounded-md border border-[#c42b1c]/40 bg-[#c42b1c]/[0.14] px-2.5 text-[11.5px] font-semibold text-[#ff99a4] transition-colors hover:bg-[#c42b1c]/25 disabled:cursor-wait"
               >
                 Remove
@@ -104,7 +127,7 @@ export default function ReviewerAssignmentPanel({ documentItem, closePanel, stop
               <button
                 type="button"
                 disabled={isSubmitting}
-                onClick={() => assignReviewer(user.ID)}
+                onClick={() => handleAssign(user.ID, user.Name)}
                 className="h-7 rounded-md border border-[#4cc2ff]/50 bg-[#4cc2ff] px-2.5 text-[11.5px] font-semibold text-[#0b1a24] transition-colors hover:bg-[#7ad4ff] disabled:cursor-wait"
               >
                 {assignedReviewer ? "Change" : "Assign"}

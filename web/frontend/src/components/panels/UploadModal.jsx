@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { documents, project } from "../../api/index.js";
+import { useConfirm } from "../../hooks/useConfirmDialog.jsx";
 
 const CHIP_INACTIVE =
   "px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer border border-white/[0.12] bg-white/[0.05] text-white/75";
@@ -26,6 +27,7 @@ export default function UploadModal({
   resetTagFieldsForm
 }) {
   const fileInputRef = useRef(null);
+  const confirm = useConfirm();
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [urlInput, setUrlInput] = useState("");
@@ -125,6 +127,13 @@ export default function UploadModal({
     const finalMergedTagsArray = [...new Set([...chosenExistingTags, ...customInputTags])];
 
     if (selectedFiles.length) {
+      const ok = await confirm({
+        title: "Upload document(s)?",
+        message: `Upload ${selectedFiles.length} file${selectedFiles.length > 1 ? "s" : ""} to "${projectName}"?`,
+        confirmLabel: "Upload",
+      });
+      if (!ok) return;
+
       setIsUploading(true);
       try {
         await Promise.all(customInputTags.map(async (tagName) => {

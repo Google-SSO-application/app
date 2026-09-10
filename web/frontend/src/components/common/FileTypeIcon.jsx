@@ -1,60 +1,302 @@
 const TYPE_STYLES = {
-  pdf: { accent: "#ff8a65", label: "PDF" },
-  md: { accent: "#4cc2ff", label: "Markdown" },
+  pdf: {
+    accent: "#ff8a65",
+    label: "PDF",
+  },
+  md: {
+    accent: "#d7d9e5",
+    label: "Markdown",
+  },
+  markdown: {
+    accent: "#d7d9e5",
+    label: "Markdown",
+  },
+  doc: {
+    accent: "#5da9ff",
+    label: "DOC",
+  },
+  docx: {
+    accent: "#5da9ff",
+    label: "DOCX",
+  },
+  txt: {
+    accent: "#d7d9e5",
+    label: "Text",
+  },
+  file: {
+    accent: "#d7d9e5",
+    label: "File",
+  },
 };
 
 export function FileTypeMark({ fileType, size = 20 }) {
-  const style = TYPE_STYLES[fileType] || { accent: "#c9c9d9", label: "File" };
+  const type = (fileType || "file").toLowerCase();
+  const style = TYPE_STYLES[type] || TYPE_STYLES.file;
 
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M6 2.5H14L19 7.5V19.5C19 20.6 18.1 21.5 17 21.5H6C4.9 21.5 4 20.6 4 19.5V4.5C4 3.4 4.9 2.5 6 2.5Z"
-        fill={`${style.accent}26`}
-        stroke={style.accent}
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <path d="M14 2.5V7.5H19" stroke={style.accent} strokeWidth="1.4" strokeLinejoin="round" />
+  /* =========================================================
+     PDF ICON
+     ========================================================= */
+  if (type === "pdf") {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        {/* Document */}
+        <path
+          d="M6.5 2.75H14L18.5 7.25V19.25C18.5 20.35 17.6 21.25 16.5 21.25H6.5C5.4 21.25 4.5 20.35 4.5 19.25V4.75C4.5 3.65 5.4 2.75 6.5 2.75Z"
+          fill={`${style.accent}12`}
+          stroke={style.accent}
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
 
-      {fileType === "pdf" ? (
+        {/* Folded corner */}
+        <path
+          d="M14 2.75V7.25H18.5"
+          stroke={style.accent}
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+
+        {/* PDF */}
         <text
           x="11.5"
-          y="16.8"
+          y="16.6"
           textAnchor="middle"
-          fontSize="6"
+          fontSize="5.2"
           fontWeight="700"
           fill={style.accent}
-          fontFamily="'Segoe UI', system-ui, sans-serif"
+          fontFamily="Arial, Helvetica, sans-serif"
         >
           PDF
         </text>
-      ) : fileType === "md" ? (
+      </svg>
+    );
+  }
+
+  /* =========================================================
+     README / MARKDOWN ICON
+     Original design uses a terminal >_ icon
+     ========================================================= */
+  if (type === "md" || type === "markdown") {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        {/* > */}
         <path
-          d="M7 16.5V11.5L9.5 14L12 11.5V16.5M14.5 11.5V16.5L16.5 13.8"
+          d="M7 8.5L10.5 12L7 15.5"
           stroke={style.accent}
-          strokeWidth="1.3"
+          strokeWidth="1.55"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-      ) : (
-        <path d="M8 12.5H16M8 16H13" stroke={style.accent} strokeWidth="1.3" strokeLinecap="round" />
-      )}
+
+        {/* _ */}
+        <path
+          d="M13 15.5H17"
+          stroke={style.accent}
+          strokeWidth="1.55"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  /* =========================================================
+     TEXT FILE
+     ========================================================= */
+  if (type === "txt") {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M6.5 3.5H14.5L18 7V20H6.5C5.67 20 5 19.33 5 18.5V5C5 4.17 5.67 3.5 6.5 3.5Z"
+          stroke={style.accent}
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M14 3.5V7.5H18"
+          stroke={style.accent}
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M8 11H15"
+          stroke={style.accent}
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M8 14H15"
+          stroke={style.accent}
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M8 17H12"
+          stroke={style.accent}
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  /* =========================================================
+     DOC / DOCX
+     ========================================================= */
+  if (type === "doc" || type === "docx") {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M6.5 2.75H14L18.5 7.25V19.25C18.5 20.35 17.6 21.25 16.5 21.25H6.5C5.4 21.25 4.5 20.35 4.5 19.25V4.75C4.5 3.65 5.4 2.75 6.5 2.75Z"
+          fill={`${style.accent}12`}
+          stroke={style.accent}
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M14 2.75V7.25H18.5"
+          stroke={style.accent}
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M8 11H15.5"
+          stroke={style.accent}
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M8 14H15.5"
+          stroke={style.accent}
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M8 17H13"
+          stroke={style.accent}
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  /* =========================================================
+     GENERIC FILE
+     ========================================================= */
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M6.5 2.75H14L18.5 7.25V19.25C18.5 20.35 17.6 21.25 16.5 21.25H6.5C5.4 21.25 4.5 20.35 4.5 19.25V4.75C4.5 3.65 5.4 2.75 6.5 2.75Z"
+        fill={`${style.accent}12`}
+        stroke={style.accent}
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M14 2.75V7.25H18.5"
+        stroke={style.accent}
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M8 11H15.5"
+        stroke={style.accent}
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M8 14H15.5"
+        stroke={style.accent}
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
-export default function FileTypeIcon({ fileType, onClick, className = "" }) {
-  const label = TYPE_STYLES[fileType]?.label || "File";
+export default function FileTypeIcon({
+  fileType,
+  onClick,
+  className = "",
+}) {
+  const type = (fileType || "file").toLowerCase();
+  const label = TYPE_STYLES[type]?.label || "File";
 
   return (
     <button
       type="button"
       onClick={onClick}
       title={label}
-      className={`grid h-11 w-11 flex-none place-items-center rounded-xl border border-white/[0.16] bg-gradient-to-br from-white/[0.2] to-white/[0.05] shadow-[inset_0_1px_0_rgba(255,255,255,.32),0_6px_16px_rgba(0,0,0,.3)] backdrop-blur-xl backdrop-saturate-[1.6] transition-transform hover:scale-[1.05] ${className}`}
+      className={`
+        grid
+        h-11
+        w-11
+        flex-none
+        place-items-center
+        rounded-xl
+        border
+        border-white/[0.11]
+        bg-gradient-to-br
+        from-white/[0.12]
+        to-white/[0.025]
+        shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_5px_14px_rgba(0,0,0,.22)]
+        backdrop-blur-xl
+        backdrop-saturate-[1.4]
+        transition-transform
+        hover:scale-[1.05]
+        ${className}
+      `}
     >
-      <FileTypeMark fileType={fileType} />
+      <FileTypeMark
+        fileType={fileType}
+        size={22}
+      />
     </button>
   );
 }

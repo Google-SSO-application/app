@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { documents } from "../../api/index.js";
+import { useConfirm } from "../../hooks/useConfirmDialog.jsx";
 
 export default function GlobalTagModal({ closePanel, stop, onCreated, showToast }) {
+  const confirm = useConfirm();
   const [name, setName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -9,6 +11,13 @@ export default function GlobalTagModal({ closePanel, stop, onCreated, showToast 
     event.preventDefault();
     const cleanName = name.trim();
     if (!cleanName) return;
+
+    const ok = await confirm({
+      title: "Create tag?",
+      message: `Create a new global tag "${cleanName}"?`,
+      confirmLabel: "Create",
+    });
+    if (!ok) return;
 
     setIsSaving(true);
     try {

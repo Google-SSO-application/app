@@ -16,21 +16,34 @@ import GlobalTagModal       from "./components/panels/GlobalTagModal.jsx";
 import AskModal             from "./components/panels/AskModal.jsx";
 import ProjectCreateModal from "./components/panels/ProjectCreateModal.jsx";
 import ReviewerAssignmentPanel from "./components/panels/ReviewerAssignmentPanel.jsx";
+import { ConfirmDialogProvider, useConfirm } from "./hooks/useConfirmDialog.jsx";
 import Toast from "./components/common/Toast.jsx";
 import { useToast } from "./hooks/useToast.js";
 
-
-export default function App() {
+function AppShell() {
   const v = useAppState();
   const { toast, showToast, closeToast } = useToast();
+  const confirm = useConfirm();
+
   const handleUpdateReviewStatus = async (id, status) => {
-  try {
-    await v.updateReviewStatus(id, status);
-    showToast(status === "published" ? "Document approved." : "Document rejected.");
-  } catch (error) {
-    showToast(error.message || "Unable to update review status.", "error");
-  }
-};
+    const isApprove = status === "published";
+    const ok = await confirm({
+      title: isApprove ? "Approve this document?" : "Reject this document?",
+      message: isApprove
+        ? "It will be published and become searchable across the hub."
+        : "The uploader will need to make changes and resubmit for review.",
+      confirmLabel: isApprove ? "Approve" : "Reject",
+      danger: !isApprove,
+    });
+    if (!ok) return;
+
+    try {
+      await v.updateReviewStatus(id, status);
+      showToast(isApprove ? "Document approved." : "Document rejected.");
+    } catch (error) {
+      showToast(error.message || "Unable to update review status.", "error");
+    }
+  };
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#05060c] font-sans text-[#eef0ff]">
@@ -168,5 +181,13 @@ export default function App() {
       {v.reviewerModalOpen && <ReviewerAssignmentPanel documentItem={v.activeReviewerDoc} closePanel={v.closePanel} stop={v.stop} onAssignmentSuccess={async () => { await Promise.all([v.refreshUploadedDocs(), v.refreshAssignedDocuments()]); }} showToast={showToast} />}
       {toast && <Toast key={toast.key} message={toast.message} type={toast.type} onClose={closeToast} />}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ConfirmDialogProvider>
+      <AppShell />
+    </ConfirmDialogProvider>
   );
 }

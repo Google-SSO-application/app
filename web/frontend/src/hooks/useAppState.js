@@ -94,7 +94,10 @@ export function useAppState() {
   });
 
   // ── doc / thread detail ──────────────────────────────────────────────────
-  const doc = publishedDocs.find((d) => d.id === s.docId) || uploadedDocs.find((d) => d.id === s.docId);
+  const doc =
+    baseDocs.find((d) => d.id === s.docId) ||
+    publishedDocs.find((d) => d.id === s.docId) ||
+    uploadedDocs.find((d) => d.id === s.docId);
   const docVals = doc
     ? (() => {
       const st = statusOf(doc);
