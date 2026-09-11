@@ -6,7 +6,7 @@ export default function Sidebar({
     ? navOpen
       ? "fixed left-3 right-3 top-[70px] z-30 max-h-[76vh] overflow-y-auto"
       : "hidden"
-    : `sticky top-[88px] flex-none transition-[flex-basis] duration-200 ease-in-out ${mini ? "basis-[68px]" : "basis-[262px]"}`;
+    : `sticky top-[88px] shrink-0 transition-[flex-basis] duration-200 ease-in-out ${mini ? "w-[68px]" : "w-[262px]"}`;
 
   const cardClass = mini
     ? "mt-3.5 flex justify-center rounded-[20px] border border-white/[0.12] bg-gradient-to-br from-[#38d0d6]/[0.16] to-white/[0.04] py-3 backdrop-blur-2xl"
@@ -28,7 +28,7 @@ export default function Sidebar({
                   : "border border-transparent bg-transparent text-white/[0.72] hover:bg-white/[0.06]"
               }`}
             >
-              <span className="w-[22px] flex-none text-center opacity-90">{n.icon}</span>
+              <span className="w-[22px] shrink-0 text-center opacity-90">{n.icon}</span>
               {!mini && <span className="flex-1 text-left">{n.label}</span>}
               {!mini && <span className="font-mono text-[11px] font-normal opacity-50">{n.count}</span>}
             </button>
@@ -54,14 +54,14 @@ export default function Sidebar({
               key={p.name}
               onClick={p.pick}
               title={p.title}
-              className={`flex h-11 flex-none items-center gap-2.5 rounded-xl px-3 text-[13.5px] font-semibold transition-colors ${
+              className={`flex h-11 shrink-0 items-center gap-2.5 rounded-xl px-3 text-[13.5px] font-semibold transition-colors ${
                 p.active
                   ? "border border-white/[0.16] bg-white/[0.13]"
                   : "border border-transparent bg-transparent text-white/70 hover:bg-white/[0.06]"
               }`}
             >
               <span
-                className="h-2 w-2 flex-none rounded-full"
+                className="h-2 w-2 shrink-0 rounded-full"
                 style={{
                   background: p.dotColor,
                   boxShadow: `0 0 10px ${p.dotColor}`,
