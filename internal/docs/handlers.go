@@ -17,6 +17,8 @@ type HttpHandler struct {
 	s *Service
 }
 
+const maxUploadSize = 100 * 1024 * 1024
+
 type assignReviewerRequest struct {
 	DocumentID string `json:"document_id"`
 	ReviewerID string `json:"reviewer_id"`
@@ -65,7 +67,7 @@ func (h *HttpHandler) UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	ownerID := authCtx.UserID
 
-	r.Body = http.MaxBytesReader(w, r.Body, 50*1024*1024)
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
 	if err := r.ParseMultipartForm(50 * 1024 * 1024); err != nil {
 		http.Error(w, "File dimensions exceed 50MB limit", http.StatusBadRequest)
 		return
