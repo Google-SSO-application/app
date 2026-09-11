@@ -45,36 +45,24 @@ export default function AssignedDocumentsView({ documents = [], loading, error, 
         {documents.map((doc) => (
           <div
             key={doc.id}
-            className="
-              group relative flex cursor-pointer items-start gap-3.5
-              rounded-[20px]
-              border border-white/[0.12]
-              bg-gradient-to-br from-white/10 to-white/[0.04]
-              px-[18px] py-4
-              shadow-[inset_0_1px_0_rgba(255,255,255,.24),0_16px_40px_rgba(0,0,0,.25)]
-              backdrop-blur-2xl
-              backdrop-saturate-[1.7]
-              transition-all duration-200 ease-out
-              hover:-translate-y-[1px]
-              hover:border-white/[0.22]
-              hover:from-white/[0.15]
-              hover:to-white/[0.065]
-              hover:shadow-[inset_0_1px_0_rgba(255,255,255,.30),0_20px_48px_rgba(0,0,0,.35)]
-            "
+            className="flex items-start gap-3.5 rounded-3xl border border-white/[0.12] bg-gradient-to-br from-white/10 to-white/[0.04] px-[18px] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,.24),0_16px_40px_rgba(0,0,0,.25)] backdrop-blur-2xl backdrop-saturate-[1.7]"
           >
-            {/* File icon */}
             <div
               className="
-                grid h-11 w-11 flex-none place-items-center
+                grid
+                h-11
+                w-11
+                flex-none
+                place-items-center
                 rounded-xl
-                border border-white/[0.11]
-                bg-gradient-to-br from-white/[0.12] to-white/[0.025]
+                border
+                border-white/[0.11]
+                bg-gradient-to-br
+                from-white/[0.12]
+                to-white/[0.025]
                 shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_5px_14px_rgba(0,0,0,.22)]
                 backdrop-blur-xl
                 backdrop-saturate-[1.4]
-                transition-all duration-200
-                group-hover:border-white/[0.18]
-                group-hover:bg-white/[0.14]
               "
             >
               <FileTypeMark
@@ -83,174 +71,52 @@ export default function AssignedDocumentsView({ documents = [], loading, error, 
               />
             </div>
 
-            {/* Document information */}
             <div className="min-w-0 flex-1">
-              {/* Title + status */}
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setViewingFile(doc)}
-                  className="
-                    truncate
-                    text-left
-                    text-[15px]
-                    font-semibold
-                    leading-[1.35]
-                    tracking-[-0.01em]
-                    text-[#eef0ff]
-                    transition-colors duration-150
-                    hover:text-[#d8dcff]
-                  "
+                  className="truncate text-left text-[15px] font-semibold text-[#f5f5f5] transition-colors hover:text-[#8fd8ff] hover:underline"
                 >
                   {doc.title || doc.fileName}
                 </button>
 
-                <span
-                  className={`
-                    rounded-lg
-                    px-2 py-0.5
-                    text-[11px]
-                    font-semibold
-                    leading-[1.4]
-                    tracking-[0.02em]
-                    ${statusClass(doc.status)}
-                  `}
-                >
+                <span className={`rounded-lg px-2 py-0.5 text-[11px] font-semibold ${statusClass(doc.status)}`}>
                   {doc.status}
                 </span>
               </div>
-
-              {/* Filename */}
-              <div
-                className="
-                  mt-1
-                  truncate
-                  text-[12px]
-                  leading-[1.45]
-                  text-white/[0.45]
-                  transition-colors duration-150
-                  group-hover:text-white/[0.52]
-                "
-              >
-                {doc.fileName}
-              </div>
-
-              {/* Tags */}
+              <div className="mt-1 truncate text-[12px] text-white/[0.5]">{doc.fileName}</div>
               {doc.tags?.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {doc.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="
-                        rounded-md
-                        border border-white/[0.08]
-                        bg-white/[0.045]
-                        px-2 py-[3px]
-                        text-[11px]
-                        font-medium
-                        leading-none
-                        text-white/[0.60]
-                        transition-all duration-150
-                        group-hover:border-white/[0.11]
-                        group-hover:bg-white/[0.065]
-                        group-hover:text-white/[0.68]
-                      "
-                    >
+                    <span key={tag} className="rounded border border-white/[0.08] bg-white/[0.05] px-2 py-[3px] text-[11px] font-semibold text-white/[0.65]">
                       #{tag}
                     </span>
                   ))}
                 </div>
               )}
-
-              {/* Metadata */}
-              <div
-                className="
-                  mt-2
-                  flex flex-wrap items-center gap-2
-                  font-mono
-                  text-[11px]
-                  leading-[1.4]
-                  text-white/[0.40]
-                  transition-colors duration-150
-                  group-hover:text-white/[0.48]
-                "
-              >
-                <span>{doc.projectName || "Unassigned"}</span>
-                <span>·</span>
-                <span>
-                  {(doc.fileType || "file").toUpperCase()}
-                </span>
-                <span>·</span>
-                <span>
-                  uploaded {formatDate(doc.createdAt)}
-                </span>
+              <div className="mt-2 flex flex-wrap gap-2 font-mono text-[11px] text-white/40">
+                <span>{doc.projectName || "Unassigned"}</span><span>·</span><span>{(doc.fileType || "file").toUpperCase()}</span><span>·</span><span>uploaded {formatDate(doc.createdAt)}</span>
               </div>
             </div>
 
-            {/* Actions */}
             <div className="ml-auto flex flex-none items-center gap-2">
-              {/* View */}
               <button
                 type="button"
                 onClick={() => setViewingFile(doc)}
-                className="
-                  h-8
-                  rounded-md
-                  border border-[#4cc2ff]/40
-                  bg-[#4cc2ff]/10
-                  px-3
-                  text-xs
-                  font-semibold
-                  text-[#8fd8ff]
-                  transition-all duration-150
-                  hover:border-[#4cc2ff]/55
-                  hover:bg-[#4cc2ff]/20
-                  hover:text-[#a9e3ff]
-                "
+                className="h-8 rounded-md border border-[#4cc2ff]/40 bg-[#4cc2ff]/10 px-3 text-xs font-semibold text-[#8fd8ff] transition-colors hover:bg-[#4cc2ff]/20"
               >
                 View file
               </button>
-
-              {/* Approve */}
               <button
-                type="button"
                 onClick={() => updateStatus(doc.id, "published")}
-                className="
-                  h-8
-                  rounded-[9px]
-                  border border-[#5fe3a1]/30
-                  bg-[#5fe3a1]/[0.12]
-                  px-3
-                  text-xs
-                  font-semibold
-                  text-[#8ff0c0]
-                  transition-all duration-150
-                  hover:border-[#5fe3a1]/45
-                  hover:bg-[#5fe3a1]/[0.20]
-                  hover:text-[#a8ffd2]
-                "
+                className="h-8 rounded-[9px] border border-[#5fe3a1]/30 bg-[#5fe3a1]/[0.12] px-3 font-semibold text-[#8ff0c0]"
               >
                 Approve
               </button>
-
-              {/* Reject */}
               <button
-                type="button"
                 onClick={() => updateStatus(doc.id, "rejected")}
-                className="
-                  h-8
-                  rounded-[9px]
-                  border border-[#ff6aa8]/30
-                  bg-[#ff6aa8]/[0.12]
-                  px-3
-                  text-xs
-                  font-semibold
-                  text-[#ffd4e5]
-                  transition-all duration-150
-                  hover:border-[#ff6aa8]/45
-                  hover:bg-[#ff6aa8]/[0.20]
-                  hover:text-[#ffe2ed]
-                "
+                className="h-8 rounded-[9px] border border-[#ff6aa8]/30 bg-[#ff6aa8]/[0.12] px-3 font-semibold text-[#ffd4e5]"
               >
                 Reject
               </button>
