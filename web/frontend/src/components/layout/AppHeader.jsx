@@ -68,6 +68,7 @@ export default function AppHeader({ query, onQuery, toggleNav, openUpload, openG
             title="Account"
             className="
               grid h-[34px] w-[34px]
+              cursor-pointer
               place-items-center
               overflow-hidden
               rounded-full
@@ -121,6 +122,7 @@ export default function AppHeader({ query, onQuery, toggleNav, openUpload, openG
                 className="
         flex h-8 w-full
         items-center justify-center
+        cursor-pointer
         rounded-lg
         bg-[#ff0000]/[0.14]
         border border-[#ff4f6d]/[0.25]

@@ -176,13 +176,13 @@ export default function UploadModal({
   };
 
   return (
-    <div onClick={handleClose} className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/60 p-5 backdrop-blur-[3px]">
+    <div onClick={handleClose} className="fixed inset-0 z-[200] grid place-items-center overflow-y-auto bg-black/60 p-5 backdrop-blur-[10px]">
       <div
         onClick={stop}
-        className="max-h-[calc(100vh-40px)] w-[min(520px,100%)] overflow-y-auto rounded-lg border border-white/10 bg-[#2b2b2b] p-6 font-['Segoe_UI',system-ui,sans-serif] shadow-[0_8px_32px_rgba(0,0,0,.5)]"
+        className="max-h-[calc(100vh-40px)] w-[min(520px,100%)] overflow-y-auto rounded-2xl bg-[#18181A] p-6 font-['Segoe_UI',system-ui,sans-serif] shadow-[0_8px_32px_rgba(0,0,0,.5)]"
       >
-        <div className="text-[17px] font-semibold text-[#f5f5f5]">Add to the hub</div>
-        <div className="mt-1 text-[13px] text-white/55">Upload files or paste a link.</div>
+        <div className="text-[16px] font-semibold text-[#ffffff]">Add to the hub</div>
+        <div className="mt-2 text-[13px] leading-[1.5] text-[#A5A4AB]">Upload files or paste a link.</div>
 
         <input ref={fileInputRef} type="file" onChange={(event) => handleFiles(event.target.files)} multiple accept=".pdf,.md" className="hidden" />
         <div
@@ -339,14 +339,14 @@ export default function UploadModal({
         </div>
 
         <div className="mt-5 flex justify-end gap-2.5">
-          <button type="button" onClick={handleClose} className="h-9 rounded-md border border-white/[0.12] bg-white/[0.05] px-4 text-[13px] font-semibold text-white/80 transition-colors hover:bg-white/[0.1] hover:text-white">
+          <button type="button" onClick={handleClose} className="h-9 rounded-md bg-[#242426] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-white/[0.1]">
             Cancel
           </button>
           <button
             type="button"
             onClick={uploadOrIndex}
             disabled={isUploading}
-            className="h-9 rounded-md border border-[#4cc2ff]/50 bg-[#4cc2ff] px-[18px] text-[13px] font-semibold text-[#0b1a24] transition-colors hover:bg-[#7ad4ff] disabled:cursor-wait disabled:opacity-60"
+            className="h-9 rounded-md bg-[#f0f0f0] px-[18px] text-[13px] font-semibold text-black transition-colors hover:bg-[#ffffff] hover:text-[#111827] disabled:cursor-wait disabled:opacity-60"
           >
             {isUploading ? "Uploading..." : `Add to ${localProjects.find((item) => item.active)?.name || projectChips.find((item) => item.active)?.name || target}`}
           </button>
