@@ -13,10 +13,10 @@ export default function ReviewerAssignmentPanel({
 
   const assignedReviewer = documentItem.reviewer_id
     ? {
-        name: documentItem.reviewer_name,
-        email: documentItem.reviewer_email,
-        picture: documentItem.reviewer_picture,
-      }
+      name: documentItem.reviewer_name,
+      email: documentItem.reviewer_email,
+      picture: documentItem.reviewer_picture,
+    }
     : null;
 
   const {
@@ -285,20 +285,19 @@ export default function ReviewerAssignmentPanel({
                   disabled={isSubmitting}
                   onClick={() => handleAssign(user.ID, user.Name)}
                   className="
-                    h-7
-                    rounded-full
-                    border border-[#4cc2ff]/50
-                    bg-[#f0f0f0]
-                    px-2.5
-                    text-[11.5px]
-                    font-semibold
-                    text-black
-                    transition-all duration-150
-                    hover:border-[#4cc2ff]/80
-                    hover:bg-white
-                    hover:text-[#111827]
-                    disabled:cursor-wait
-                  "
+    h-7
+    rounded-full
+    border border-[#4cc2ff]/50
+    bg-[#f0f0f0]
+    px-2.5
+    text-[11.5px]
+    font-semibold
+    text-black
+    transition-colors duration-150
+    hover:bg-[#d8d8d8]
+    hover:text-[#111827]
+    disabled:cursor-wait
+  "
                 >
                   {assignedReviewer ? "Change" : "Assign"}
                 </button>

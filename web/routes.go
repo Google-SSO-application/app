@@ -55,8 +55,10 @@ func NewRouter(
 			r.Get("/docs/published", docsHandler.ListPublishedDocsHandler)
 			r.Get("/docs/counts/projects", docsHandler.GetPublishedCountsHandler)
 
+			// search
 			r.Get("/docs/search", docsHandler.HandleSearch)
 
+			// tags routes
 			r.Get("/tags", docsHandler.ListTagsHandler) 
 			r.Post("/tags", docsHandler.CreateGlobalTagHandler)
 			r.Post("/docs/tags", docsHandler.CreateDocTagsHandler)

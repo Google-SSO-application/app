@@ -12,13 +12,10 @@ import (
 
 var ErrNotFound = errors.New("user not found")
 
-// Repository abstracts persistence so Service (and anything that tests it)
-// depends on an interface, not a concrete Postgres client.
 type postgresRepository struct {
 	pool *pgxpool.Pool
 }
 
-// NewPostgresRepository is the DI constructor used by cmd/khub/main.go.
 func NewPostgresRepository(pool *pgxpool.Pool) types.UserRepository {
 	return &postgresRepository{pool: pool}
 }

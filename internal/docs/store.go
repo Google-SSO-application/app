@@ -11,7 +11,6 @@ type FileStorage interface {
 	SaveFile(filename string, src io.Reader) (string, error)
 }
 
-// LocalStorage satisfies the FileStorage interface using the container volume filesystem
 type LocalStorage struct {
 	uploadDir string
 }

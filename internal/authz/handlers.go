@@ -11,7 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Cookie names shared by every handler below.
 const (
 	AccessTokenCookieName  = "khub_at"
 	RefreshTokenCookieName = "khub_rt"
@@ -36,7 +35,6 @@ func NewHandler(google *GoogleOAuth, userSvc UserService, access *AccessTokenIss
 	return &Handler{google: google, users: userSvc, access: access, refresh: refresh, cfg: cfg, log: log}
 }
 
-// HandleGoogleLogin starts the OAuth flow: GET /web/auth/google/login
 func (h *Handler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	state, err := GenerateState()
 	if err != nil {
@@ -57,7 +55,6 @@ func (h *Handler) HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, h.google.AuthCodeURL(state), http.StatusFound)
 }
 
-// HandleGoogleCallback completes the OAuth flow: GET /web/auth/google/callback
 func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -112,7 +109,6 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, h.cfg.FrontendURL, http.StatusFound)
 }
 
-// HandleRefresh rotates the session: POST /web/auth/refresh
 func (h *Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -143,7 +139,6 @@ func (h *Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// HandleLogout revokes the opaque token in Redis and clears both cookies.
 func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	if cookie, err := r.Cookie(AccessTokenCookieName); err == nil && cookie.Value != "" {
 		_ = h.access.Revoke(r.Context(), cookie.Value)
@@ -153,7 +148,6 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// HandleMe returns the current user's profile.
 func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
 	ac := FromContext(r.Context())
 	u, err := h.users.GetByID(r.Context(), ac.UserID)
@@ -171,8 +165,6 @@ func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// issueSession mints a fresh opaque access token + JWT refresh token pair
-// and sets them as HttpOnly cookies.
 func (h *Handler) issueSession(w http.ResponseWriter, ctx context.Context, userID uuid.UUID, email, role string) error {
 	accessToken, err := h.access.Issue(ctx, types.Session{UserID: userID, Email: email, Role: role})
 	if err != nil {

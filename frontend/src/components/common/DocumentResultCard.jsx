@@ -7,13 +7,6 @@ function formatDate(value) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
 }
 
-function statusClass(status) {
-  if (status === "published") {
-    return "bg-[#5fe3a1]/[0.14] border border-[#5fe3a1]/[0.2] text-[#5fe3a1]";
-  }
-  return "bg-[#ffb058]/[0.16] border border-[#ffb058]/[0.2] text-[#ffb058]";
-}
-
 export default function DocumentResultCard({ doc, onOpenDetail, onView }) {
   return (
     <div
@@ -80,12 +73,14 @@ export default function DocumentResultCard({ doc, onOpenDetail, onView }) {
           </button>
 
           <span
-            className={`
-              rounded-lg px-2 py-0.5
-              text-[11px] font-semibold
-              tracking-[0.02em]
-              ${statusClass(doc.status)}
-            `}
+            className="
+    rounded-lg px-2 py-0.5
+    text-[11px] font-semibold
+    tracking-[0.02em]
+    bg-[#5fe3a1]/[0.14]
+    border border-[#5fe3a1]/[0.2]
+    text-[#5fe3a1]
+  "
           >
             {doc.status}
           </span>

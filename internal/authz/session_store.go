@@ -11,7 +11,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// redisTokenStore is the Redis-backed TokenStore implementation.
 type redisTokenStore struct {
 	client *redis.Client
 }

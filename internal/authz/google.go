@@ -17,8 +17,6 @@ import (
 
 var ErrDomainNotAllowed = errors.New("google account domain is not allowed")
 
-// GoogleOAuth wraps the standard oauth2 config and enforces the
-// "codimite.com only" acceptance criterion.
 type GoogleOAuth struct {
 	config        *oauth2.Config
 	allowedDomain string
@@ -33,8 +31,6 @@ type GoogleUserInfo struct {
 	HD            string `json:"hd"`
 }
 
-// NewGoogleOAuth is the DI constructor; clientID/secret come from the
-// Google Cloud Console OAuth client
 func NewGoogleOAuth(clientID, clientSecret, redirectURL, allowedDomain string) *GoogleOAuth {
 	return &GoogleOAuth{
 		config: &oauth2.Config{
@@ -55,18 +51,13 @@ func (g *GoogleOAuth) AuthCodeURL(state string) string {
 	)
 }
 
-// Exchange swaps the authorization code returned to the callback for an
-// OAuth token.
 func (g *GoogleOAuth) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
 	return g.config.Exchange(ctx, code)
 }
 
-// GoogleUserInfo is the subset of the OIDC userinfo response we care about.
 const googleUserInfoURL = "https://openidconnect.googleapis.com/v1/userinfo"
 
-// FetchUserInfo calls Google's userinfo endpoint using the token we just
-// received directly from Google's token endpoint over TLS, then enforces
-// the allowed-domain acceptance criterion.
+
 func (g *GoogleOAuth) FetchUserInfo(ctx context.Context, tok *oauth2.Token) (*GoogleUserInfo, error) {
 	client := g.config.Client(ctx, tok)
 
@@ -108,8 +99,6 @@ func (g *GoogleOAuth) FetchUserInfo(ctx context.Context, tok *oauth2.Token) (*Go
 	return &info, nil
 }
 
-// GenerateState returns a URL-safe random string used as the OAuth `state`
-// parameter (CSRF protection for the login flow).
 func GenerateState() (string, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {

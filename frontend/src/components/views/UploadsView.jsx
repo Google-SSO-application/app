@@ -10,10 +10,19 @@ function formatDate(value) {
 }
 
 function statusClass(status) {
-  if (status === "published") {
-    return "bg-[#5fe3a1]/[0.14] border border-[#5fe3a1]/[0.2] text-[#5fe3a1]";
+  switch (status?.toLowerCase()) {
+    case "published":
+      return "bg-[#5fe3a1]/[0.14] border border-[#5fe3a1]/[0.2] text-[#5fe3a1]";
+
+    case "rejected":
+      return "bg-[#ff5f6d]/[0.14] border border-[#ff5f6d]/[0.2] text-[#ff8f99]";
+
+    case "pending":
+      return "bg-[#ffb058]/[0.16] border border-[#ffb058]/[0.2] text-[#ffb058]";
+
+    default:
+      return "bg-white/[0.08] border border-white/[0.12] text-white/[0.65]";
   }
-  return "bg-[#ffb058]/[0.16] border border-[#ffb058]/[0.2] text-[#ffb058]";
 }
 
 export default function UploadsView({ documents = [], loading, error, refresh, openUpload, onAssignReviewer }) {

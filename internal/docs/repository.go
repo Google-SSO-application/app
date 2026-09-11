@@ -344,10 +344,13 @@ func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docI
 
 	const updateQuery = `
 		UPDATE documents 
-		SET status = $1, 
-		    reviewer_id = CASE WHEN $1 = 'published' THEN NULL ELSE reviewer_id END,
-		    updated_at = NOW() 
-		WHERE id = $2 AND reviewer_id = $3`
+    SET status = $1, 
+        reviewer_id = CASE 
+            WHEN $1 IN ('published', 'rejected') THEN NULL 
+            ELSE reviewer_id 
+        END,
+        updated_at = NOW() 
+    WHERE id = $2 AND reviewer_id = $3`
 
 	ct, err := tx.Exec(ctx, updateQuery, status, docID, reviewerID)
 	if err != nil {

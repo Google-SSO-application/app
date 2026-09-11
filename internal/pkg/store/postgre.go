@@ -31,7 +31,6 @@ func NewPostgresPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-// RunMigrations applies each embedded migration in filename order.
 func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 	entries, err := fs.ReadDir(migrationFiles, "migrations")
 	if err != nil {

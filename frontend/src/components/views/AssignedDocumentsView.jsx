@@ -109,15 +109,49 @@ export default function AssignedDocumentsView({ documents = [], loading, error, 
                 View file
               </button>
               <button
+                type="button"
                 onClick={() => updateStatus(doc.id, "published")}
-                className="h-8 rounded-[9px] border border-[#5fe3a1]/30 bg-[#5fe3a1]/[0.12] px-3 font-semibold text-[#8ff0c0]"
+                className="
+    inline-flex h-8 items-center gap-1.5
+    rounded-lg
+    border border-[#5fe3a1]/30
+    bg-[#5fe3a1]/[0.10]
+    px-3
+    text-[12px] font-semibold
+    text-[#8ff0c0]
+    shadow-[inset_0_1px_0_rgba(255,255,255,.08)]
+    transition-all duration-150
+    hover:-translate-y-[1px]
+    hover:bg-[#5fe3a1]/[0.18]
+    hover:border-[#5fe3a1]/40
+    hover:shadow-[0_4px_14px_rgba(95,227,161,.12)]
+    active:translate-y-0
+  "
               >
+                <span className="text-[13px]">✓</span>
                 Approve
               </button>
               <button
+                type="button"
                 onClick={() => updateStatus(doc.id, "rejected")}
-                className="h-8 rounded-[9px] border border-[#ff6aa8]/30 bg-[#ff6aa8]/[0.12] px-3 font-semibold text-[#ffd4e5]"
+                className="
+    inline-flex h-8 items-center gap-1.5
+    rounded-lg
+    border border-[#ff6b7a]/30
+    bg-[#ff6b7a]/[0.08]
+    px-3
+    text-[12px] font-semibold
+    text-[#ff9da7]
+    shadow-[inset_0_1px_0_rgba(255,255,255,.06)]
+    transition-all duration-150
+    hover:-translate-y-[1px]
+    hover:bg-[#ff6b7a]/[0.15]
+    hover:border-[#ff6b7a]/40
+    hover:shadow-[0_4px_14px_rgba(255,107,122,.12)]
+    active:translate-y-0
+  "
               >
+                <span className="text-[13px]">×</span>
                 Reject
               </button>
             </div>

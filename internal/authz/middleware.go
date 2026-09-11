@@ -16,7 +16,6 @@ func withAuthContext(ctx context.Context, ac types.AuthContext) context.Context 
 	return context.WithValue(ctx, authContextKey, ac)
 }
 
-// FromContext reads the AuthContext previously attached by Middleware.
 func FromContext(ctx context.Context) types.AuthContext {
 	if ac, ok := ctx.Value(authContextKey).(types.AuthContext); ok {
 		return ac
@@ -24,9 +23,7 @@ func FromContext(ctx context.Context) types.AuthContext {
 	return types.AuthContext{}
 }
 
-// Middleware resolves the opaque access-token cookie (if any) against the
-// TokenStore/AccessTokenIssuer and attaches an AuthContext to every
-// request, authenticated or not.
+
 func Middleware(issuer *AccessTokenIssuer) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +45,6 @@ func Middleware(issuer *AccessTokenIssuer) func(http.Handler) http.Handler {
 	}
 }
 
-// RequireAuth blocks any request whose AuthContext isn't authenticated.
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !FromContext(r.Context()).Authenticated {

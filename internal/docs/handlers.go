@@ -430,7 +430,6 @@ func (h *HttpHandler) GetPublishedCountsHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Unpack map layout records smoothly into our DTO slice array structure
 	results := make([]ProjectCount, 0, len(countsMap))
 	for name, count := range countsMap {
 		results = append(results, ProjectCount{

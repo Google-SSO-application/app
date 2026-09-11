@@ -34,26 +34,93 @@ export default function GlobalTagModal({ closePanel, stop, onCreated, showToast 
   };
 
   return (
-    <div onClick={closePanel} className="fixed inset-0 z-[60] grid place-items-center bg-[#04050c]/60 p-5 backdrop-blur-[8px]">
-      <div onClick={stop} className="w-[min(420px,100%)] rounded-3xl border border-white/[0.17] bg-gradient-to-br from-white/[0.14] to-white/5 p-[26px] shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_34px_80px_rgba(0,0,0,.6)] backdrop-blur-[34px] backdrop-saturate-[1.8]">
-        <div className="text-xl font-bold">Create global tag</div>
-        <div className="mt-1.5 text-[13.5px] text-white/[0.62]">Make a tag available across document uploads.</div>
+    <div
+      onClick={closePanel}
+      className="
+        fixed inset-0 z-[200]
+        grid place-items-center
+        bg-black/60
+        p-5
+        backdrop-blur-[10px]
+      "
+    >
+      <div
+        onClick={stop}
+        className="
+          w-[min(420px,100%)]
+          rounded-2xl
+          bg-[#18181A]
+          p-6
+          font-['Segoe_UI',system-ui,sans-serif]
+          shadow-[0_8px_32px_rgba(0,0,0,.5)]
+        "
+      >
+        <div className="text-[16px] font-semibold text-white">
+          Create global tag
+        </div>
+
+        <div className="mt-1.5 text-[13px] text-[#A5A4AB]">
+          Make a tag available across document uploads.
+        </div>
+
         <form onSubmit={createTag}>
           <input
             autoFocus
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="e.g. security-v2"
-            className="mt-[18px] h-[42px] w-full rounded-xl border border-white/[0.14] bg-white/[0.07] px-[13px] text-[13.5px] text-[#eef0ff] outline-none"
+            className="
+              mt-[18px]
+              h-10
+              w-full
+              rounded-lg
+              border border-white/[0.12]
+              bg-[#242426]
+              px-3
+              text-[13px]
+              text-white
+              outline-none
+              placeholder:text-[#77777D]
+              focus:border-white/[0.22]
+              focus:bg-[#29292B]
+            "
           />
+
           <div className="mt-5 flex justify-end gap-2.5">
-            <button type="button" onClick={closePanel} className="h-10 rounded-xl border border-white/[0.16] bg-white/[0.07] px-4 text-inherit">
+            <button
+              type="button"
+              onClick={closePanel}
+              className="
+                h-9
+                rounded-lg
+                bg-[#242426]
+                px-4
+                text-[13px]
+                font-semibold
+                text-white
+                transition-colors
+                hover:bg-[#2d2d30]
+              "
+            >
               Cancel
             </button>
+
             <button
               type="submit"
               disabled={isSaving || !name.trim()}
-              className="h-10 rounded-xl border border-[#5fe3a1]/[0.35] bg-[#5fe3a1]/[0.18] px-[18px] font-semibold text-[#8ff0c0] disabled:cursor-not-allowed disabled:opacity-60"
+              className="
+                h-9
+                rounded-lg
+                bg-[#f0f0f0]
+                px-[18px]
+                text-[13px]
+                font-semibold
+                text-black
+                transition-colors
+                hover:bg-[#d8d8d8]
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+              "
             >
               {isSaving ? "Creating..." : "Create tag"}
             </button>

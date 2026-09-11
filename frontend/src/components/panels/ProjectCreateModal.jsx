@@ -203,20 +203,24 @@ export default function ProjectCreateModal({ closePanel, stop, onCreated, showTo
               type="submit"
               disabled={isSaving || !name.trim()}
               className="
-                h-8
-                rounded-md
-                border border-[#4cc2ff]/50
-                bg-[#f0f0f0]
-                px-[18px]
-                text-[12.5px]
-                font-semibold
-                text-black
-                transition-colors
-                hover:bg-white
-                hover:text-[#111827]
-                disabled:cursor-not-allowed
-                disabled:opacity-50
-              "
+    h-8
+    rounded-md
+    border border-[#4cc2ff]/50
+    bg-[#f0f0f0]
+    px-[18px]
+    text-[12.5px]
+    font-semibold
+    text-black
+    transition-all
+    duration-150
+    hover:border-[#4cc2ff]
+    hover:bg-white
+    hover:shadow-[0_0_12px_rgba(76,194,255,0.3)]
+    hover:-translate-y-[1px]
+    hover:text-[#111827]
+    disabled:cursor-not-allowed
+    disabled:opacity-50
+  "
             >
               {isSaving ? "Creating..." : "Save space"}
             </button>
