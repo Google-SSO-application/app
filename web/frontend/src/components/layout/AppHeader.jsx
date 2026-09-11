@@ -1,4 +1,4 @@
-export default function AppHeader({ query, onQuery, toggleNav, openUpload, openGlobalTag, signOut }) {
+export default function AppHeader({ query, onQuery, toggleNav, openUpload, openGlobalTag, signOut, currentUser }) {
   return (
     <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-white/[0.09] bg-gradient-to-b from-[#0c0e1c]/75 to-[#0c0e1c]/45 px-[clamp(14px,3vw,28px)] py-3 backdrop-blur-2xl backdrop-saturate-[1.7]">
       <button
@@ -45,9 +45,15 @@ export default function AppHeader({ query, onQuery, toggleNav, openUpload, openG
         <button
           onClick={signOut}
           title="Sign out"
-          className="grid h-[34px] w-[34px] place-items-center rounded-full border border-white/20 bg-gradient-to-br from-[#8b7bff] to-[#38d0d6] text-xs font-bold text-[#0b0c18] transition-[filter] hover:brightness-110"
+          className="grid h-[34px] w-[34px] place-items-center overflow-hidden rounded-full text-xs font-bold transition-[filter] hover:brightness-110"
         >
-          NR
+          {currentUser.picture ? (
+                <img src={currentUser.picture} alt={currentUser.name} className="h-full w-full rounded-full object-cover" />
+              ) : (
+                <div className="grid h-full w-full place-items-center rounded-full bg-gradient-to-br from-[#8b7bff] to-[#38d0d6] text-xs font-semibold text-[#0b0c18]">
+                  {currentUser.name?.charAt(0).toUpperCase()}
+                </div>
+              )}
         </button>
       </div>
     </header>

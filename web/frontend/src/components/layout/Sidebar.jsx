@@ -30,7 +30,7 @@ export default function Sidebar({
             >
               <span className="w-[22px] flex-none text-center opacity-90">{n.icon}</span>
               {!mini && <span className="flex-1 text-left">{n.label}</span>}
-              {!mini && <span className="font-mono text-[11px] opacity-50">{n.count}</span>}
+              {!mini && <span className="font-mono text-[11px] font-normal opacity-50">{n.count}</span>}
             </button>
           ))}
         </div>
@@ -64,7 +64,7 @@ export default function Sidebar({
                 className="h-2 w-2 flex-none rounded-full"
                 style={{
                   background: p.dotColor,
-                  boxShadow: `0 0 8px ${p.dotColor}88`,
+                  boxShadow: `0 0 10px ${p.dotColor}`,
                 }}
               />
 
@@ -75,7 +75,7 @@ export default function Sidebar({
               )}
 
               {!mini && (
-                <span className="font-mono text-[11px] opacity-50">
+                <span className="font-mono text-[11px] font-normal opacity-50">
                   {p.count}
                 </span>
               )}

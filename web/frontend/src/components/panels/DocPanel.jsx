@@ -31,7 +31,7 @@ export default function DocPanel({ docV, closePanel }) {
 
         {/* Header row metadata markers */}
         <div className="flex items-center gap-2.5">
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold border ${statusClass(docV.status)}`}>
+          <span className={`rounded-lg px-2 py-0.5 text-[11px] font-semibold border ${statusClass(docV.status)}`}>
             {docV.status || "pending"}
           </span>
           <span className="font-mono text-[11.5px] text-white/50">

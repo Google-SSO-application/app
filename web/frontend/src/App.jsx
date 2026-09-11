@@ -19,11 +19,13 @@ import ReviewerAssignmentPanel from "./components/panels/ReviewerAssignmentPanel
 import { ConfirmDialogProvider, useConfirm } from "./hooks/useConfirmDialog.jsx";
 import Toast from "./components/common/Toast.jsx";
 import { useToast } from "./hooks/useToast.js";
+import { useCurrentUser } from "./hooks/useCurrentUser.js"
 
 function AppShell() {
   const v = useAppState();
   const { toast, showToast, closeToast } = useToast();
   const confirm = useConfirm();
+  const { currentUser } = useCurrentUser(v.signedIn);
 
   const handleUpdateReviewStatus = async (id, status) => {
     const isApprove = status === "published";
@@ -73,7 +75,7 @@ function AppShell() {
       )}
 
       {/* Main app shell */}
-      {v.signedIn && (
+      {v.signedIn && currentUser && (
         <div className="relative z-[2] flex min-h-screen flex-col">
 
           <AppHeader
@@ -83,6 +85,7 @@ function AppShell() {
             openUpload={v.openUpload}
             openGlobalTag={v.openGlobalTag}
             signOut={v.signOut}
+            currentUser={currentUser}
           />
 
           <div className="mx-auto flex w-full max-w-[1560px] flex-1 items-start gap-[clamp(12px,2vw,22px)] p-[clamp(14px,2.4vw,24px)]">
