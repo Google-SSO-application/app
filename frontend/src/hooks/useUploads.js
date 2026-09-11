@@ -9,19 +9,53 @@ export function useUploads(signedIn) {
 
   const refreshUploadedDocs = useCallback(async () => {
     if (!signedIn) return;
+
     setUploadsLoading(true);
     setUploadsError("");
+
     try {
-      const response = await documents.getDashboard();
-      if (!response.ok) throw new Error("Unable to load your uploads.");
-      const docs = await response.json();
-      setUploadedDocs(Array.isArray(docs) ? docs.map((document) => ({
-        ...document,
-        projectName: document.projectName || document.project_name || "Unassigned",
-        fileType: document.fileType || document.file_type || "",
-        fileName: document.fileName || document.file_name || document.title || "Untitled document",
-        createdAt: document.createdAt || document.created_at || "",
-      })) : []);
+      const [docsResponse, countResponse] = await Promise.all([
+        documents.getDashboard(),
+        documents.getUploadsCount(),
+      ]);
+
+      if (!docsResponse.ok) {
+        throw new Error("Unable to load your uploads.");
+      }
+
+      const docs = await docsResponse.json();
+
+      setUploadedDocs(
+        Array.isArray(docs)
+          ? docs.map((document) => ({
+            ...document,
+            projectName:
+              document.projectName ||
+              document.project_name ||
+              "Unassigned",
+            fileType:
+              document.fileType ||
+              document.file_type ||
+              "",
+            fileName:
+              document.fileName ||
+              document.file_name ||
+              document.title ||
+              "Untitled document",
+            createdAt:
+              document.createdAt ||
+              document.created_at ||
+              "",
+          }))
+          : []
+      );
+
+      if (countResponse.ok) {
+        const data = await countResponse.json();
+        setUploadedDocsCount(
+          typeof data.count === "number" ? data.count : 0
+        );
+      }
     } catch (error) {
       setUploadsError(error.message || "Unable to load your uploads.");
     } finally {
