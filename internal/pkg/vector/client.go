@@ -12,7 +12,7 @@ const (
 	// EmbeddingModel is the Gemini embedding model used for all vector operations.
 	EmbeddingModel = "gemini-embedding-2"
 	// EmbeddingDimensions is the output dimensionality for generated embeddings.
-	EmbeddingDimensions int32 = 3072
+	EmbeddingDimensions int32 = 1536
 )
 
 type Client struct {

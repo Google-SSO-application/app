@@ -362,10 +362,16 @@ func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docI
 	}
 
 	if status == "published" && len(chunks) > 0 && len(vectors) == len(chunks) {
-		const insertQuery = `INSERT INTO document_embeddings (document_id, chunk_index, content, embedding) VALUES ($1, $2, $3, $4)`
+		const insertChunkQuery = `INSERT INTO document_chunks (document_id, chunk_index, content) VALUES ($1, $2, $3) RETURNING id`
+		const insertEmbQuery = `INSERT INTO document_embeddings (chunk_id, embedding) VALUES ($1, $2)`
 		for i, chunk := range chunks {
-			if _, err := tx.Exec(ctx, insertQuery, docID, chunk.Index, chunk.Content, pgvector.NewVector(vectors[i])); err != nil {
+			var chunkID uuid.UUID
+			err := tx.QueryRow(ctx, insertChunkQuery, docID, chunk.Index, chunk.Content).Scan(&chunkID)
+			if err != nil {
 				return fmt.Errorf("insert chunk %d: %w", chunk.Index, err)
+			}
+			if _, err := tx.Exec(ctx, insertEmbQuery, chunkID, pgvector.NewVector(vectors[i])); err != nil {
+				return fmt.Errorf("insert embedding for chunk %d: %w", chunk.Index, err)
 			}
 		}
 	}
@@ -387,9 +393,10 @@ func (r *PostgresRepository) FindByVectorSimilarity(ctx context.Context, vectorV
 				WHERE dt.document_id = d.id
 			), '{}') AS tags
 		FROM (
-			SELECT document_id, MIN(embedding <=> $1) as distance
-			FROM document_embeddings
-			GROUP BY document_id
+			SELECT dc.document_id, MIN(de.embedding <=> $1) as distance
+			FROM document_embeddings de
+			JOIN document_chunks dc ON dc.id = de.chunk_id
+			GROUP BY dc.document_id
 		) best
 		JOIN documents d ON d.id = best.document_id
 		LEFT JOIN projects p ON p.id = d.project_id

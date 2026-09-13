@@ -26,8 +26,11 @@ CREATE INDEX IF NOT EXISTS idx_documents_project_id
 CREATE INDEX IF NOT EXISTS idx_document_tags_tag_id
     ON document_tags (tag_id);
 
-CREATE INDEX IF NOT EXISTS idx_document_embeddings_document_id
-    ON document_embeddings (document_id);
+CREATE INDEX IF NOT EXISTS idx_document_chunks_document_id
+    ON document_chunks (document_id);
+
+CREATE INDEX IF NOT EXISTS idx_document_embeddings_chunk_id
+    ON document_embeddings (chunk_id);
     
 CREATE INDEX IF NOT EXISTS document_embeddings_vector_idx 
-ON document_embeddings USING hnsw (embedding vector_cosine_ops);
+    ON document_embeddings USING hnsw (embedding vector_cosine_ops);
