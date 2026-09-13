@@ -67,7 +67,7 @@ func LoadConfig() (*Config, error) {
 		UploadDir: getEnv("UPLOAD_DIR", "/data/uploads"),
 
 		GeminiAPIKey: os.Getenv("GEMINI_API_KEY"),
-		MaxDistance: getEnvFloat("MAX_DISTANCE", 0.8),
+		MaxDistance: getEnvFloat("MAX_DISTANCE", 0.5),
 	}
 
 	if cfg.PostgresDSN == "" {
