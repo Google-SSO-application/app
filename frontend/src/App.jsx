@@ -39,9 +39,13 @@ function AppShell() {
     });
     if (!ok) return;
 
+    if (isApprove) {
+      showToast("Processing document — chunking & embedding…", "processing");
+    }
+
     try {
       await v.updateReviewStatus(id, status);
-      showToast(isApprove ? "Document approved." : "Document rejected.");
+      showToast(isApprove ? "Document approved & published." : "Document rejected.");
     } catch (error) {
       showToast(error.message || "Unable to update review status.", "error");
     }

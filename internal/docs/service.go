@@ -99,34 +99,54 @@ func (s *Service) ProcessReviewWorkflow(ctx context.Context, docID, reviewerID u
 		return fmt.Errorf("failed to fetch document metadata: %w", err)
 	}
 
-	var contentToEmbed string
-	var vectorValues []float32
+	var chunks []vector.Chunk
+	var vectors [][]float32
 
 	if status == "published" {
+		var rawContent string
+
 		switch doc.FileType {
 		case "md":
 			fileBytes, err := os.ReadFile(doc.FilePath)
 			if err != nil {
 				return fmt.Errorf("failed to read markdown file from internal volume: %w", err)
 			}
-			contentToEmbed = string(fileBytes)
+			rawContent = string(fileBytes)
 
 		case "pdf":
-			contentToEmbed = fmt.Sprintf("Title: %s. File: %s", doc.Title, doc.FileName)
+			extracted, err := vector.ExtractPDFText(doc.FilePath)
+			if err != nil {
+				rawContent = fmt.Sprintf("Title: %s. File: %s", doc.Title, doc.FileName)
+			} else {
+				rawContent = extracted
+			}
 
 		default:
 			return fmt.Errorf("unsupported document file format type pipeline rule: %s", doc.FileType)
 		}
 
-		formattedPrompt := fmt.Sprintf("title: %s | text: %s", doc.Title, contentToEmbed)
+		// Prefix with the document title for better semantic context.
+		fullContent := fmt.Sprintf("title: %s\n\n%s", doc.Title, rawContent)
 
-		vectorValues, err = s.vectorClient.GenerateVector(ctx, formattedPrompt, false)
+		// Chunk the content into overlapping segments.
+		chunks = vector.ChunkText(fullContent)
+		if len(chunks) == 0 {
+			return fmt.Errorf("document produced zero chunks after processing")
+		}
+
+		// Extract text from each chunk for batch embedding.
+		texts := make([]string, len(chunks))
+		for i, c := range chunks {
+			texts[i] = c.Content
+		}
+
+		vectors, err = s.vectorClient.GenerateVectors(ctx, texts)
 		if err != nil {
 			return fmt.Errorf("gemini embedding engine fault: %w", err)
 		}
 	}
 
-	if err := s.repo.PublishDocumentWithVector(ctx, docID, reviewerID, status, contentToEmbed, vectorValues); err != nil {
+	if err := s.repo.PublishDocumentWithVector(ctx, docID, reviewerID, status, chunks, vectors); err != nil {
 		return fmt.Errorf("failed to update document review workflow state: %w", err)
 	}
 

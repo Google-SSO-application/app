@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS document_tags (
 CREATE TABLE IF NOT EXISTS document_embeddings (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    chunk_index INT NOT NULL,
     content     TEXT NOT NULL,
-    embedding   vector(1536) NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    embedding   vector(3072) NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT unique_doc_chunk UNIQUE(document_id, chunk_index)
 );

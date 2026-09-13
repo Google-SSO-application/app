@@ -3,7 +3,16 @@ package vector
 import (
 	"context"
 	"errors"
+	"fmt"
+
 	"google.golang.org/genai"
+)
+
+const (
+	// EmbeddingModel is the Gemini embedding model used for all vector operations.
+	EmbeddingModel = "gemini-embedding-2"
+	// EmbeddingDimensions is the output dimensionality for generated embeddings.
+	EmbeddingDimensions int32 = 3072
 )
 
 type Client struct {
@@ -21,6 +30,8 @@ func NewClient(ctx context.Context, apiKey string) (*Client, error) {
 	return &Client{genaiClient: client}, nil
 }
 
+// GenerateVector generates a single embedding vector for the given text.
+// Use isQuery=true for search queries, false for document content.
 func (c *Client) GenerateVector(ctx context.Context, text string, isQuery bool) ([]float32, error) {
 	var formattedContent string
 	if isQuery {
@@ -35,10 +46,10 @@ func (c *Client) GenerateVector(ctx context.Context, text string, isQuery bool) 
 
 	result, err := c.genaiClient.Models.EmbedContent(
 		ctx,
-		"gemini-embedding-2",
+		EmbeddingModel,
 		contents,
 		&genai.EmbedContentConfig{
-			OutputDimensionality: genai.Ptr[int32](1536),
+			OutputDimensionality: genai.Ptr(EmbeddingDimensions),
 		},
 	)
 	if err != nil {
@@ -50,4 +61,41 @@ func (c *Client) GenerateVector(ctx context.Context, text string, isQuery bool) 
 	}
 
 	return result.Embeddings[0].Values, nil
+}
+
+// GenerateVectors generates embedding vectors for multiple text chunks in a single API call.
+// Returns one vector per input text, in the same order.
+func (c *Client) GenerateVectors(ctx context.Context, texts []string) ([][]float32, error) {
+	if len(texts) == 0 {
+		return nil, nil
+	}
+
+	contents := make([]*genai.Content, len(texts))
+	for i, text := range texts {
+		formatted := "title: none | text: " + text
+		contents[i] = genai.NewContentFromText(formatted, genai.RoleUser)
+	}
+
+	result, err := c.genaiClient.Models.EmbedContent(
+		ctx,
+		EmbeddingModel,
+		contents,
+		&genai.EmbedContentConfig{
+			OutputDimensionality: genai.Ptr(EmbeddingDimensions),
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("batch embed content: %w", err)
+	}
+
+	if len(result.Embeddings) != len(texts) {
+		return nil, fmt.Errorf("expected %d embeddings, got %d", len(texts), len(result.Embeddings))
+	}
+
+	vectors := make([][]float32, len(result.Embeddings))
+	for i, emb := range result.Embeddings {
+		vectors[i] = emb.Values
+	}
+
+	return vectors, nil
 }

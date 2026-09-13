@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
+	"github.com/codimite-learning/knowledge-hub/internal/pkg/vector"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pgvector/pgvector-go"
@@ -24,7 +25,7 @@ type Repository interface {
 	AddTagToDocument(ctx context.Context, docID uuid.UUID, tagName string) error
 	GetTagsByDocID(ctx context.Context, docID uuid.UUID) ([]string, error)
 	GetUploadsCount(ctx context.Context, ownerID uuid.UUID) (int, error)
-	PublishDocumentWithVector(ctx context.Context, docID, reviewerID uuid.UUID, status string, content string, vectorValues []float32) error
+	PublishDocumentWithVector(ctx context.Context, docID, reviewerID uuid.UUID, status string, chunks []vector.Chunk, vectors [][]float32) error
 	FindByVectorSimilarity(ctx context.Context, vectorValues []float32, projectName string, maxDistance float64, limit int) ([]types.Document, []float64, error)
 	GetPublishedCountsByProject(ctx context.Context) (map[string]int, error)
 	GetPublishedByProject(ctx context.Context, projectName string) ([]types.Document, error)
@@ -335,7 +336,7 @@ func (r *PostgresRepository) GetUploadsCount(ctx context.Context, ownerID uuid.U
 	return count, nil
 }
 
-func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docID, reviewerID uuid.UUID, status, content string, vectorValues []float32) error {
+func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docID, reviewerID uuid.UUID, status string, chunks []vector.Chunk, vectors [][]float32) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return err
@@ -360,13 +361,12 @@ func (r *PostgresRepository) PublishDocumentWithVector(ctx context.Context, docI
 		return errors.New("document not found or unauthorized reviewer")
 	}
 
-	if status == "published" && len(vectorValues) > 0 {
-		if _, err := tx.Exec(ctx, `DELETE FROM document_embeddings WHERE document_id = $1`, docID); err != nil {
-			return err
-		}
-		const insertQuery = `INSERT INTO document_embeddings (document_id, content, embedding) VALUES ($1, $2, $3)`
-		if _, err := tx.Exec(ctx, insertQuery, docID, content, pgvector.NewVector(vectorValues)); err != nil {
-			return err
+	if status == "published" && len(chunks) > 0 && len(vectors) == len(chunks) {
+		const insertQuery = `INSERT INTO document_embeddings (document_id, chunk_index, content, embedding) VALUES ($1, $2, $3, $4)`
+		for i, chunk := range chunks {
+			if _, err := tx.Exec(ctx, insertQuery, docID, chunk.Index, chunk.Content, pgvector.NewVector(vectors[i])); err != nil {
+				return fmt.Errorf("insert chunk %d: %w", chunk.Index, err)
+			}
 		}
 	}
 
