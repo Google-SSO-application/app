@@ -16,7 +16,3 @@ CREATE TABLE IF NOT EXISTS document_embeddings (
     -- Ensure chunk uniqueness parameters are safe
     CONSTRAINT unique_doc_chunk UNIQUE(document_id, chunk_index)
 );
-
--- 3. Provision cosine distance index for blazing-fast similarity checks
-CREATE INDEX IF NOT EXISTS document_embeddings_vector_idx 
-ON document_embeddings USING hnsw (embedding vector_cosine_ops);
