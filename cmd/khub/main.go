@@ -89,7 +89,7 @@ func run(logger *slog.Logger) error {
 	projectService := projects.NewService(projectRepo)
 	projectHandler := projects.NewHttpHandler(projectService)
 
-	authHandler := authz.NewHandler(googleOAuth, userService, accessIssuer, refreshIssuer, types.HandlerConfig{
+	authHandler := authz.NewHandler(googleOAuth, userService, accessIssuer, refreshIssuer, authz.HandlerConfig{
 		FrontendURL:  cfg.FrontendURL,
 		CookieDomain: cfg.CookieDomain,
 		CookieSecure: cfg.CookieSecure,

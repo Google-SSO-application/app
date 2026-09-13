@@ -10,13 +10,20 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type UserRepository interface {
+	GetByEmail(ctx context.Context, email string) (*types.User, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*types.User, error)
+	Upsert(ctx context.Context, user *types.User) error
+	ListByRole(ctx context.Context, role types.Role) ([]*types.User, error)
+}
+
 var ErrNotFound = errors.New("user not found")
 
 type postgresRepository struct {
 	pool *pgxpool.Pool
 }
 
-func NewPostgresRepository(pool *pgxpool.Pool) types.UserRepository {
+func NewPostgresRepository(pool *pgxpool.Pool) UserRepository {
 	return &postgresRepository{pool: pool}
 }
 

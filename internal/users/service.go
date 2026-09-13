@@ -4,18 +4,19 @@ import (
 	"context"
 
 	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
+	"github.com/codimite-learning/knowledge-hub/internal/authz"
 	"github.com/google/uuid"
 )
 
 type Service struct {
-	repo types.UserRepository
+	repo UserRepository
 }
 
-func NewService(repo types.UserRepository) *Service {
+func NewService(repo UserRepository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) GetOrCreateFromGoogle(ctx context.Context, p types.GoogleProfile) (*types.User, error) {
+func (s *Service) GetOrCreateFromGoogle(ctx context.Context, p authz.GoogleProfile) (*types.User, error) {
 	u := &types.User{
 		Email:   p.Email,
 		Name:    p.Name,

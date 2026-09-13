@@ -6,24 +6,28 @@ import (
 	"encoding/hex"
 	"errors"
 	"time"
-
-	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
 )
 
 var ErrSessionNotFound = errors.New("session not found or expired")
 
+type TokenStore interface {
+	SaveSession(ctx context.Context, token string, session Session, ttl time.Duration) error
+	GetSession(ctx context.Context, token string) (Session, error)
+	DeleteSession(ctx context.Context, token string) error
+}
+
 type AccessTokenIssuer struct {
-	store types.TokenStore
+	store TokenStore
 	ttl   time.Duration
 }
 
-func NewAccessTokenIssuer(store types.TokenStore, ttl time.Duration) *AccessTokenIssuer {
+func NewAccessTokenIssuer(store TokenStore, ttl time.Duration) *AccessTokenIssuer {
 	return &AccessTokenIssuer{store: store, ttl: ttl}
 }
 
 func (a *AccessTokenIssuer) TTL() time.Duration { return a.ttl }
 
-func (a *AccessTokenIssuer) Issue(ctx context.Context, s types.Session) (string, error) {
+func (a *AccessTokenIssuer) Issue(ctx context.Context, s Session) (string, error) {
 	token, err := generateOpaqueToken(32)
 	if err != nil {
 		return "", err
@@ -34,7 +38,7 @@ func (a *AccessTokenIssuer) Issue(ctx context.Context, s types.Session) (string,
 	return token, nil
 }
 
-func (a *AccessTokenIssuer) Validate(ctx context.Context, token string) (types.Session, error) {
+func (a *AccessTokenIssuer) Validate(ctx context.Context, token string) (Session, error) {
 	return a.store.GetSession(ctx, token)
 }
 

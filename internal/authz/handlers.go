@@ -11,6 +11,18 @@ import (
 	"github.com/google/uuid"
 )
 
+type GoogleProfile struct {
+	Email   string
+	Name    string
+	Picture string
+}
+
+type HandlerConfig struct {
+	FrontendURL  string
+	CookieDomain string
+	CookieSecure bool
+}
+
 const (
 	AccessTokenCookieName  = "khub_at"
 	RefreshTokenCookieName = "khub_rt"
@@ -18,7 +30,7 @@ const (
 )
 
 type UserService interface {
-	GetOrCreateFromGoogle(context.Context, types.GoogleProfile) (*types.User, error)
+	GetOrCreateFromGoogle(context.Context, GoogleProfile) (*types.User, error)
 	GetByID(context.Context, uuid.UUID) (*types.User, error)
 }
 
@@ -27,11 +39,11 @@ type Handler struct {
 	users   UserService
 	access  *AccessTokenIssuer
 	refresh *RefreshTokenIssuer
-	cfg     types.HandlerConfig
+	cfg     HandlerConfig
 	log     *slog.Logger
 }
 
-func NewHandler(google *GoogleOAuth, userSvc UserService, access *AccessTokenIssuer, refresh *RefreshTokenIssuer, cfg types.HandlerConfig, log *slog.Logger) *Handler {
+func NewHandler(google *GoogleOAuth, userSvc UserService, access *AccessTokenIssuer, refresh *RefreshTokenIssuer, cfg HandlerConfig, log *slog.Logger) *Handler {
 	return &Handler{google: google, users: userSvc, access: access, refresh: refresh, cfg: cfg, log: log}
 }
 
@@ -89,7 +101,7 @@ func (h *Handler) HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := h.users.GetOrCreateFromGoogle(ctx, types.GoogleProfile{
+	u, err := h.users.GetOrCreateFromGoogle(ctx, GoogleProfile{
 		Email:   info.Email,
 		Name:    info.Name,
 		Picture: info.Picture,
@@ -166,7 +178,7 @@ func (h *Handler) HandleMe(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) issueSession(w http.ResponseWriter, ctx context.Context, userID uuid.UUID, email, role string) error {
-	accessToken, err := h.access.Issue(ctx, types.Session{UserID: userID, Email: email, Role: role})
+	accessToken, err := h.access.Issue(ctx, Session{UserID: userID, Email: email, Role: role})
 	if err != nil {
 		return err
 	}

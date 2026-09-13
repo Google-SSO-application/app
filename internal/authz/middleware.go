@@ -4,34 +4,40 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-
-	"github.com/codimite-learning/knowledge-hub/internal/pkg/types"
+	"github.com/google/uuid"
 )
 
 type ctxKey string
 
+type AuthContext struct {
+	Authenticated bool
+	UserID        uuid.UUID
+	Email         string
+	Role          string
+}
+
 const authContextKey ctxKey = "khub_auth_context"
 
-func withAuthContext(ctx context.Context, ac types.AuthContext) context.Context {
+func withAuthContext(ctx context.Context, ac AuthContext) context.Context {
 	return context.WithValue(ctx, authContextKey, ac)
 }
 
-func FromContext(ctx context.Context) types.AuthContext {
-	if ac, ok := ctx.Value(authContextKey).(types.AuthContext); ok {
+func FromContext(ctx context.Context) AuthContext {
+	if ac, ok := ctx.Value(authContextKey).(AuthContext); ok {
 		return ac
 	}
-	return types.AuthContext{}
+	return AuthContext{}
 }
 
 
 func Middleware(issuer *AccessTokenIssuer) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ac := types.AuthContext{}
+			ac := AuthContext{}
 
 			if cookie, err := r.Cookie(AccessTokenCookieName); err == nil && cookie.Value != "" {
 				if sess, verr := issuer.Validate(r.Context(), cookie.Value); verr == nil {
-					ac = types.AuthContext{
+					ac = AuthContext{
 						Authenticated: true,
 						UserID:        sess.UserID,
 						Email:         sess.Email,
